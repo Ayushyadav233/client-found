@@ -1,5 +1,5 @@
 import React from 'react';
-import { studioStore, Lead, Project, Invoice } from '../../store/studioStore';
+import { studioStore } from '../../store/studioStore';
 
 interface Props {
   onNavigate: (tab: string) => void;

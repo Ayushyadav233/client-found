@@ -9,9 +9,9 @@ export const AdminLogin: React.FC<Props> = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = studioStore.login(password);
+    const ok = await studioStore.adminLogin(password);
     if (ok) {
       onSuccess();
     } else {
@@ -19,8 +19,8 @@ export const AdminLogin: React.FC<Props> = ({ onSuccess }) => {
     }
   };
 
-  const handleQuickLogin = () => {
-    studioStore.login('admin123');
+  const handleQuickLogin = async () => {
+    await studioStore.adminLogin('admin123');
     onSuccess();
   };
 

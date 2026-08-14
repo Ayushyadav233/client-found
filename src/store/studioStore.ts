@@ -1,3 +1,5 @@
+import { api } from '../api/client';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -108,297 +110,72 @@ export interface StudioState {
   logs: AuditLog[];
 }
 
-const PRESEEDED_USERS: UserAccount[] = [
-  {
-    id: 'usr-admin-01',
-    name: 'Principal Admin',
-    email: 'admin@clientfound.com',
-    company: 'Client Found Studios',
-    role: 'admin',
-    passwordHash: 'admin123',
-    joinedDate: '2026-01-01',
-  },
-  {
-    id: 'usr-cli-01',
-    name: 'Jordan Michaels',
-    email: 'jordan@slate.inc',
-    company: 'Slate / Hearth Banking',
-    role: 'client',
-    passwordHash: 'client123',
-    joinedDate: '2026-05-10',
-  },
-  {
-    id: 'usr-cli-02',
-    name: 'Dr. Priya Mehta',
-    email: 'priya@canvashealth.com',
-    company: 'Canvas Health',
-    role: 'client',
-    passwordHash: 'client123',
-    joinedDate: '2026-03-01',
-  },
-  {
-    id: 'usr-cli-03',
-    name: 'Lena Carstens',
-    email: 'lena@wildpath.app',
-    company: 'Wildpath Inc',
-    role: 'client',
-    passwordHash: 'client123',
-    joinedDate: '2026-04-12',
-  },
-];
-
-const INITIAL_STATE: StudioState = {
-  isAuthenticated: true, // admin authenticated by default for quick demo
-  currentUser: {
-    id: 'usr-admin-01',
-    name: 'Principal Admin',
-    email: 'admin@clientfound.com',
-    company: 'Client Found Studios',
-    role: 'admin',
-    joinedDate: '2026-01-01',
-  },
-  registeredUsers: PRESEEDED_USERS,
-  cms: {
-    openSlotsText: '2 build slots open for Q2 2026',
-    availableSlotsCount: 2,
-    heroTitle: 'Websites & apps,',
-    heroHighlight: 'engineered to ship.',
-    heroSubtitle: 'Client Found is a senior product team building high-converting websites and mobile applications for funded startups, enterprises and public-sector organisations.',
-    nextAvailableStart: 'Monday, May 12',
-    filmVideoUrl: 'https://videos.pexels.com/video-files/8631879/8631879-uhd_3840_2160_25fps.mp4',
-    filmPosterUrl: 'https://images.pexels.com/videos/8631879/pexels-photo-8631879.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200',
-    contactEmail: 'hello@clientfound.com',
-  },
-  leads: [
-    {
-      id: 'LEAD-101',
-      name: 'Sarah Connor',
-      email: 'sarah@cyberdyne.io',
-      company: 'Cyberdyne AI',
-      service: 'Web Development',
-      budget: '$25,000 - $50,000',
-      timeline: '4-6 Weeks',
-      description: 'Looking to build a next-gen web platform with interactive 3D visualizations and real-time LLM query streams.',
-      status: 'New',
-      createdAt: '2026-07-22 14:30',
-    },
-    {
-      id: 'LEAD-102',
-      name: 'Michael Vance',
-      email: 'mvance@vancecap.com',
-      company: 'Vance Capital',
-      service: 'FinTech App',
-      budget: '$50,000+',
-      timeline: '8 Weeks',
-      description: 'Need a mobile iOS/Android React Native wallet with automated portfolio rebalancing and biometric authentication.',
-      status: 'Reviewing',
-      createdAt: '2026-07-21 09:15',
-    },
-    {
-      id: 'LEAD-103',
-      name: 'Elena Rostova',
-      email: 'elena@biomedx.org',
-      company: 'BioMedX Health',
-      service: 'HIPAA Portal',
-      budget: '$25,000 - $50,000',
-      timeline: '6 Weeks',
-      description: 'HIPAA compliant patient intake system with automated lab test report parsing and PDF exports.',
-      status: 'Quoted',
-      createdAt: '2026-07-19 16:45',
-    },
-  ],
-  projects: [
-    {
-      id: 'PRJ-2026-01',
-      name: 'Hearth Banking Portal',
-      clientName: 'Jordan Michaels (Slate)',
-      clientEmail: 'jordan@slate.inc',
-      type: 'FinTech Web App',
-      progress: 85,
-      status: 'In Progress',
-      budget: '$45,000',
-      dueDate: '2026-08-15',
-      stagingUrl: 'https://hearth-staging.clientfound.app',
-      githubRepo: 'github.com/clientfound/hearth-banking',
-      updatedAt: '2026-07-23 11:00',
-      team: [
-        { name: 'Ana S.', role: 'Lead Architect', avatarBg: 'bg-[#c9a86c]' },
-        { name: 'Tom W.', role: 'Senior Frontend', avatarBg: 'bg-[#8fa3b8]' },
-      ],
-      milestones: [
-        { id: 'm1', title: 'DB Schema & OAuth2 Auth', completed: true, dueDate: '2026-07-01' },
-        { id: 'm2', title: 'Real-time Transaction Feed & Charts', completed: true, dueDate: '2026-07-14' },
-        { id: 'm3', title: 'Stripe Treasury API Integration', completed: true, dueDate: '2026-07-25' },
-        { id: 'm4', title: 'Security & Penetration Audit', completed: false, dueDate: '2026-08-05' },
-      ],
-    },
-    {
-      id: 'PRJ-2026-02',
-      name: 'Wildpath Outdoor Companion',
-      clientName: 'Lena Carstens',
-      clientEmail: 'lena@wildpath.app',
-      type: 'React Native Mobile App',
-      progress: 100,
-      status: 'Shipped',
-      budget: '$38,000',
-      dueDate: '2026-06-30',
-      stagingUrl: 'https://wildpath.app',
-      githubRepo: 'github.com/clientfound/wildpath-mobile',
-      updatedAt: '2026-07-10 15:20',
-      team: [
-        { name: 'Ryan K.', role: 'Mobile Specialist', avatarBg: 'bg-[#9caf88]' },
-        { name: 'Priya M.', role: 'UX Designer', avatarBg: 'bg-[#b8927a]' },
-      ],
-      milestones: [
-        { id: 'wm1', title: 'Vector Map Tiles & Offline Sync', completed: true, dueDate: '2026-05-20' },
-        { id: 'wm2', title: 'GPS Route Tracking Engine', completed: true, dueDate: '2026-06-05' },
-        { id: 'wm3', title: 'App Store Submission & Review', completed: true, dueDate: '2026-06-28' },
-      ],
-    },
-    {
-      id: 'PRJ-2026-03',
-      name: 'Canvas Telehealth Platform',
-      clientName: 'Dr. Priya Mehta',
-      clientEmail: 'priya@canvashealth.com',
-      type: 'Healthcare SaaS',
-      progress: 60,
-      status: 'QA Review',
-      budget: '$62,000',
-      dueDate: '2026-09-01',
-      stagingUrl: 'https://canvas-qa.clientfound.app',
-      githubRepo: 'github.com/clientfound/canvas-telehealth',
-      updatedAt: '2026-07-22 18:00',
-      team: [
-        { name: 'Ana S.', role: 'Fullstack Dev', avatarBg: 'bg-[#c9a86c]' },
-        { name: 'Lucas C.', role: 'Backend Security', avatarBg: 'bg-[#a08fb4]' },
-      ],
-      milestones: [
-        { id: 'cm1', title: 'WebRTC Video Consultation Room', completed: true, dueDate: '2026-07-05' },
-        { id: 'cm2', title: 'HIPAA Compliant Encrypted Vault', completed: true, dueDate: '2026-07-18' },
-        { id: 'cm3', title: 'AI Clinical Notes Transcription', completed: false, dueDate: '2026-08-10' },
-      ],
-    },
-  ],
-  invoices: [
-    {
-      id: 'INV-2026-001',
-      clientName: 'Jordan Michaels (Slate)',
-      projectName: 'Hearth Banking Portal',
-      amount: 22500,
-      status: 'Paid',
-      dueDate: '2026-07-01',
-      issuedDate: '2026-06-15',
-      description: 'Milestone 1 & 2 Delivery (50% upfront)',
-    },
-    {
-      id: 'INV-2026-002',
-      clientName: 'Jordan Michaels (Slate)',
-      projectName: 'Hearth Banking Portal',
-      amount: 22500,
-      status: 'Pending',
-      dueDate: '2026-08-15',
-      issuedDate: '2026-07-20',
-      description: 'Final Milestone Delivery & Launch',
-    },
-    {
-      id: 'INV-2026-003',
-      clientName: 'Lena Carstens',
-      projectName: 'Wildpath Outdoor Companion',
-      amount: 38000,
-      status: 'Paid',
-      dueDate: '2026-06-30',
-      issuedDate: '2026-06-01',
-      description: 'Complete App Release Payment',
-    },
-    {
-      id: 'INV-2026-004',
-      clientName: 'Dr. Priya Mehta',
-      projectName: 'Canvas Telehealth Platform',
-      amount: 31000,
-      status: 'Paid',
-      dueDate: '2026-07-10',
-      issuedDate: '2026-06-20',
-      description: 'Sprint Phase 1 Delivery',
-    },
-  ],
-  clients: [
-    {
-      id: 'CLI-01',
-      name: 'Jordan Michaels',
-      company: 'Slate / Hearth Banking',
-      email: 'jordan@slate.inc',
-      phone: '+1 (512) 890-3411',
-      totalSpent: 45000,
-      activeProjectsCount: 1,
-      joinedDate: '2026-05-10',
-    },
-    {
-      id: 'CLI-02',
-      name: 'Lena Carstens',
-      company: 'Wildpath Inc',
-      email: 'lena@wildpath.app',
-      phone: '+1 (415) 762-9012',
-      totalSpent: 38000,
-      activeProjectsCount: 0,
-      joinedDate: '2026-04-12',
-    },
-    {
-      id: 'CLI-03',
-      name: 'Dr. Priya Mehta',
-      company: 'Canvas Health Solutions',
-      email: 'priya@canvashealth.com',
-      phone: '+1 (650) 431-8890',
-      totalSpent: 62000,
-      activeProjectsCount: 1,
-      joinedDate: '2026-03-01',
-    },
-  ],
-  logs: [
-    { id: 'log-1', timestamp: '2026-07-23 12:00', user: 'Admin', action: 'Logged into Admin Dashboard', type: 'auth' },
-    { id: 'log-2', timestamp: '2026-07-22 14:30', user: 'System', action: 'New lead received from Cyberdyne AI', type: 'lead' },
-    { id: 'log-3', timestamp: '2026-07-20 11:15', user: 'Admin', action: 'Generated invoice INV-2026-002 ($22,500)', type: 'invoice' },
-    { id: 'log-4', timestamp: '2026-07-18 16:40', user: 'Ana S.', action: 'Marked milestone "HIPAA Vault" complete', type: 'project' },
-  ],
+const EMPTY_CMS: CMSConfig = {
+  openSlotsText: '',
+  availableSlotsCount: 0,
+  heroTitle: '',
+  heroHighlight: '',
+  heroSubtitle: '',
+  nextAvailableStart: '',
+  filmVideoUrl: '',
+  filmPosterUrl: '',
+  contactEmail: '',
 };
 
-const STORAGE_KEY = 'clientfound_studio_state_v2';
+function emptyState(): StudioState {
+  return {
+    isAuthenticated: false,
+    currentUser: null,
+    registeredUsers: [],
+    leads: [],
+    projects: [],
+    invoices: [],
+    clients: [],
+    cms: EMPTY_CMS,
+    logs: [],
+  };
+}
+
+export interface AuthResult {
+  success: boolean;
+  user?: UserProfile;
+  message?: string;
+}
 
 class StudioStore {
   private state: StudioState;
   private listeners: Set<() => void> = new Set();
+  private ready = false;
 
   constructor() {
-    this.state = this.loadState();
+    this.state = emptyState();
   }
 
-  private loadState(): StudioState {
+  public async init(): Promise<void> {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (!parsed.registeredUsers || parsed.registeredUsers.length === 0) {
-          parsed.registeredUsers = PRESEEDED_USERS;
-        }
-        return parsed;
+      const res = await api.getState();
+      this.state = { ...res.state, cms: res.state.cms || EMPTY_CMS };
+    } catch {
+      try {
+        const { cms } = await api.getCMS();
+        this.state = { ...emptyState(), cms };
+      } catch {
+        this.state = emptyState();
       }
-    } catch (e) {
-      console.warn('Failed to load studio store state from localStorage:', e);
     }
-    return INITIAL_STATE;
+    this.ready = true;
+    this.notify();
   }
 
-  private saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
-    } catch (e) {
-      console.warn('Failed to save studio state to localStorage:', e);
-    }
-    this.notify();
+  public isReady(): boolean {
+    return this.ready;
   }
 
   public subscribe(listener: () => void) {
     this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   private notify() {
@@ -409,103 +186,64 @@ class StudioStore {
     return this.state;
   }
 
+  private syncWarn(action: string, err: unknown) {
+    console.warn(`[store] Failed to sync ${action}:`, err);
+  }
+
   // ── Authentication System ──
-  public clientLogin(email: string, password: string): { success: boolean; user?: UserProfile; message?: string } {
-    const trimmedEmail = email.toLowerCase().trim();
-    const user = this.state.registeredUsers.find(
-      (u) => u.email.toLowerCase() === trimmedEmail && (u.passwordHash === password || password === 'client123' || password === 'demo' || password === 'admin123')
-    );
-
-    if (user) {
-      const profile: UserProfile = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        company: user.company,
-        role: user.role,
-        joinedDate: user.joinedDate,
-      };
-      this.state.currentUser = profile;
-      this.state.isAuthenticated = user.role === 'admin';
-      this.addLog(`User ${profile.email} (${profile.role}) logged in successfully`, 'auth');
-      this.saveState();
-      return { success: true, user: profile };
+  public async clientLogin(email: string, password: string): Promise<AuthResult> {
+    try {
+      const res = await api.login(email, password);
+      if (!res.success || !res.user) {
+        return { success: false, message: res.message || 'Invalid email or password.' };
+      }
+      this.applyUser(res.user);
+      return { success: true, user: res.user };
+    } catch (err) {
+      return { success: false, message: (err as Error).message || 'Invalid email or password.' };
     }
-
-    return { success: false, message: 'Invalid email or password.' };
   }
 
-  public clientRegister(data: { name: string; email: string; password: string; company: string }): { success: boolean; user?: UserProfile; message?: string } {
-    const trimmedEmail = data.email.toLowerCase().trim();
-    const existing = this.state.registeredUsers.find((u) => u.email.toLowerCase() === trimmedEmail);
-    if (existing) {
-      return { success: false, message: 'Account with this email already exists. Please log in.' };
+  public async clientRegister(data: { name: string; email: string; password: string; company: string }): Promise<AuthResult> {
+    try {
+      const res = await api.register(data);
+      if (!res.success || !res.user) {
+        return { success: false, message: res.message || 'Registration failed.' };
+      }
+      this.applyUser(res.user);
+      return { success: true, user: res.user };
+    } catch (err) {
+      return { success: false, message: (err as Error).message || 'Registration failed.' };
     }
-
-    const newUser: UserAccount = {
-      id: `usr-cli-${Date.now()}`,
-      name: data.name,
-      email: trimmedEmail,
-      company: data.company,
-      role: 'client',
-      passwordHash: data.password || 'client123',
-      joinedDate: new Date().toISOString().slice(0, 10),
-    };
-
-    this.state.registeredUsers.push(newUser);
-
-    // Create client account record
-    this.state.clients.push({
-      id: `CLI-${Math.floor(10 + Math.random() * 90)}`,
-      name: data.name,
-      company: data.company,
-      email: trimmedEmail,
-      phone: '+1 (512) 555-0199',
-      totalSpent: 0,
-      activeProjectsCount: 0,
-      joinedDate: newUser.joinedDate,
-    });
-
-    const profile: UserProfile = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      company: newUser.company,
-      role: newUser.role,
-      joinedDate: newUser.joinedDate,
-    };
-
-    this.state.currentUser = profile;
-    this.state.isAuthenticated = false;
-    this.addLog(`New client account registered: ${profile.email} (${profile.company})`, 'auth');
-    this.saveState();
-    return { success: true, user: profile };
   }
 
-  public adminLogin(password: string): boolean {
-    if (password === 'admin123' || password === 'admin' || password === 'demo') {
-      const adminProfile: UserProfile = {
-        id: 'usr-admin-01',
-        name: 'Principal Admin',
-        email: 'admin@clientfound.com',
-        company: 'Client Found Studios',
-        role: 'admin',
-        joinedDate: '2026-01-01',
-      };
-      this.state.currentUser = adminProfile;
-      this.state.isAuthenticated = true;
-      this.addLog('Master Admin authenticated into console', 'auth');
-      this.saveState();
+  public async adminLogin(password: string): Promise<boolean> {
+    try {
+      const res = await api.adminLogin(password);
+      if (!res.success || !res.user) return false;
+      this.applyUser(res.user);
       return true;
+    } catch (err) {
+      console.warn('[store] Admin login failed:', err);
+      return false;
     }
-    return false;
   }
 
-  public logout() {
-    this.addLog(`User ${this.state.currentUser?.email || 'Unknown'} logged out`, 'auth');
+  private applyUser(user: UserProfile) {
+    this.state.currentUser = user;
+    this.state.isAuthenticated = user.role === 'admin';
+    this.notify();
+  }
+
+  public async logout() {
     this.state.currentUser = null;
     this.state.isAuthenticated = false;
-    this.saveState();
+    this.notify();
+    try {
+      await api.logout();
+    } catch (err) {
+      this.syncWarn('logout', err);
+    }
   }
 
   // ── Leads ──
@@ -517,8 +255,8 @@ class StudioStore {
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
     };
     this.state.leads.unshift(newLead);
-    this.addLog(`New lead submission from ${newLead.company} (${newLead.name})`, 'lead');
-    this.saveState();
+    this.notify();
+    api.addLead(newLead).catch((err) => this.syncWarn('lead submission', err));
     return newLead;
   }
 
@@ -526,8 +264,8 @@ class StudioStore {
     const lead = this.state.leads.find((l) => l.id === id);
     if (lead) {
       lead.status = status;
-      this.addLog(`Lead ${id} (${lead.company}) status updated to "${status}"`, 'lead');
-      this.saveState();
+      this.notify();
+      api.updateLeadStatus(id, status).catch((err) => this.syncWarn(`lead ${id} status`, err));
     }
   }
 
@@ -562,8 +300,8 @@ class StudioStore {
     };
 
     this.state.projects.unshift(newProject);
-    this.addLog(`Converted lead ${leadId} into active project ${newProject.id}`, 'project');
-    this.saveState();
+    this.notify();
+    api.convertLead(leadId, newProject).catch((err) => this.syncWarn('lead conversion', err));
     return newProject;
   }
 
@@ -575,8 +313,8 @@ class StudioStore {
       updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
     };
     this.state.projects.unshift(newPrj);
-    this.addLog(`Created new project "${newPrj.name}"`, 'project');
-    this.saveState();
+    this.notify();
+    api.addProject(newPrj).catch((err) => this.syncWarn('project creation', err));
     return newPrj;
   }
 
@@ -584,8 +322,8 @@ class StudioStore {
     const prj = this.state.projects.find((p) => p.id === id);
     if (prj) {
       Object.assign(prj, updates, { updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16) });
-      this.addLog(`Updated project "${prj.name}"`, 'project');
-      this.saveState();
+      this.notify();
+      api.updateProject(id, updates).catch((err) => this.syncWarn(`project ${id} update`, err));
     }
   }
 
@@ -599,8 +337,8 @@ class StudioStore {
         const done = prj.milestones.filter((x) => x.completed).length;
         prj.progress = Math.round((done / total) * 100);
         prj.updatedAt = new Date().toISOString().replace('T', ' ').slice(0, 16);
-        this.addLog(`Toggled milestone "${m.title}" in ${prj.name}`, 'project');
-        this.saveState();
+        this.notify();
+        api.toggleMilestone(projectId, milestoneId).catch((err) => this.syncWarn('milestone toggle', err));
       }
     }
   }
@@ -613,8 +351,8 @@ class StudioStore {
       issuedDate: new Date().toISOString().slice(0, 10),
     };
     this.state.invoices.unshift(newInv);
-    this.addLog(`Generated invoice ${newInv.id} for $${newInv.amount.toLocaleString()}`, 'invoice');
-    this.saveState();
+    this.notify();
+    api.addInvoice(newInv).catch((err) => this.syncWarn('invoice creation', err));
     return newInv;
   }
 
@@ -622,34 +360,27 @@ class StudioStore {
     const inv = this.state.invoices.find((i) => i.id === id);
     if (inv) {
       inv.status = status;
-      this.addLog(`Invoice ${id} marked as "${status}"`, 'invoice');
-      this.saveState();
+      this.notify();
+      api.updateInvoiceStatus(id, status).catch((err) => this.syncWarn(`invoice ${id} status`, err));
     }
   }
 
   // ── CMS ──
   public updateCMS(updates: Partial<CMSConfig>) {
-    this.state.cms = { ...this.state.cms, ...updates };
-    this.addLog('Updated site CMS content', 'cms');
-    this.saveState();
+    const next = { ...this.state.cms, ...updates };
+    this.state.cms = next;
+    this.notify();
+    api.updateCMS(next).catch((err) => this.syncWarn('cms update', err));
   }
 
-  // ── Logging ──
-  private addLog(action: string, type: AuditLog['type']) {
-    const newLog: AuditLog = {
-      id: `log-${Date.now()}`,
-      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      user: this.state.currentUser?.name || 'Guest User',
-      action,
-      type,
-    };
-    this.state.logs.unshift(newLog);
-    if (this.state.logs.length > 100) this.state.logs.pop();
-  }
-
-  public resetToDefaults() {
-    this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
-    this.saveState();
+  // ── Reset ──
+  public async resetToDefaults() {
+    try {
+      await api.resetState();
+    } catch (err) {
+      this.syncWarn('state reset', err);
+    }
+    await this.init();
   }
 }
 

@@ -5,6 +5,45 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
 }
 
+/* ─── Theme tokens (dark = default) ─── */
+:root {
+  --app-bg: #0a0c10;
+  --app-surface: rgba(22, 24, 30, 0.55);
+  --app-surface-strong: rgba(18, 20, 26, 0.88);
+  --app-border: rgba(255, 255, 255, 0.07);
+  --app-text: #f4f2ed;
+  --app-text-soft: #d6d3d1;
+  --app-text-muted: #a8a29e;
+  --app-text-faint: #78716c;
+  --app-input: #12141a;
+  --app-row: rgba(255, 255, 255, 0.02);
+  --app-progress-track: rgba(255, 255, 255, 0.1);
+  --app-progress-bg: rgba(0, 0, 0, 0.3);
+  --app-header: rgba(18, 20, 26, 0.9);
+  --app-btn-ghost-bg: rgba(255, 255, 255, 0.03);
+  --app-btn-ghost-border: rgba(255, 255, 255, 0.1);
+  --app-btn-ghost-text: #f4f2ed;
+}
+
+[data-theme="light"] {
+  --app-bg: #f3f1ec;
+  --app-surface: rgba(255, 255, 255, 0.78);
+  --app-surface-strong: rgba(255, 255, 255, 0.96);
+  --app-border: rgba(0, 0, 0, 0.09);
+  --app-text: #171717;
+  --app-text-soft: #3f3f46;
+  --app-text-muted: #57534e;
+  --app-text-faint: #78716c;
+  --app-input: #ffffff;
+  --app-row: rgba(0, 0, 0, 0.03);
+  --app-progress-track: rgba(0, 0, 0, 0.09);
+  --app-progress-bg: rgba(0, 0, 0, 0.04);
+  --app-header: rgba(255, 255, 255, 0.92);
+  --app-btn-ghost-bg: rgba(0, 0, 0, 0.04);
+  --app-btn-ghost-border: rgba(0, 0, 0, 0.14);
+  --app-btn-ghost-text: #171717;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -25,14 +64,14 @@
 @layer utilities {
   /* ─── Surfaces ─── */
   .surface {
-    background: rgba(22, 24, 30, 0.55);
+    background: var(--app-surface);
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .surface-strong {
-    background: rgba(18, 20, 26, 0.88);
+    background: var(--app-surface-strong);
     backdrop-filter: blur(32px) saturate(180%);
     -webkit-backdrop-filter: blur(32px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -110,7 +149,7 @@
     transform: translateY(-2px);
   }
 
-  .hairline { border-color: rgba(255,255,255,0.07); }
+  .hairline { border-color: var(--app-border); }
 
   .gold-border {
     position: relative;
@@ -301,3 +340,41 @@
 
 input, button, textarea { font-family: inherit; }
 * { scrollbar-width: thin; scrollbar-color: #26282e #0a0c10; }
+
+/* ─── Light theme overrides (scoped to [data-theme="light"]) ─── */
+[data-theme="light"] .text-white { color: var(--app-text); }
+[data-theme="light"] .text-stone-200 { color: var(--app-text); }
+[data-theme="light"] .text-stone-300 { color: var(--app-text-soft); }
+[data-theme="light"] .text-stone-400 { color: var(--app-text-muted); }
+[data-theme="light"] .text-stone-500,
+[data-theme="light"] .text-stone-600 { color: var(--app-text-faint); }
+
+[data-theme="light"] .bg-\[\#0a0c10\] { background-color: var(--app-bg); }
+[data-theme="light"] .bg-\[\#12141a\] { background-color: var(--app-input); }
+[data-theme="light"] .bg-\[\#12141a\]\/90 { background-color: var(--app-header); }
+
+[data-theme="light"] .bg-white\/\[0\.02\],
+[data-theme="light"] .bg-white\/\[0\.03\] { background-color: var(--app-row); }
+[data-theme="light"] .bg-white\/5 { background-color: rgba(0, 0, 0, 0.04); }
+[data-theme="light"] .bg-white\/10 { background-color: var(--app-progress-track); }
+[data-theme="light"] .bg-black\/30 { background-color: var(--app-progress-bg); }
+
+[data-theme="light"] .border-white\/5,
+[data-theme="light"] .border-white\/10,
+[data-theme="light"] .border-white\/20,
+[data-theme="light"] .border-white\/30 { border-color: var(--app-border); }
+
+[data-theme="light"] .text-gold { color: #8a6a2b; }
+[data-theme="light"] .text-\[\#e3c893\] { color: #8a6a2b; }
+[data-theme="light"] .text-lime-300 { color: #3f6212; }
+[data-theme="light"] .text-amber-300 { color: #92400e; }
+[data-theme="light"] .text-red-300 { color: #b91c1c; }
+[data-theme="light"] .text-red-400 { color: #dc2626; }
+[data-theme="light"] .text-sky-300 { color: #0369a1; }
+
+[data-theme="light"] .btn-ghost {
+  background-color: var(--app-btn-ghost-bg);
+  border-color: var(--app-btn-ghost-border);
+  color: var(--app-btn-ghost-text);
+}
+[data-theme="light"] .hover\:bg-white\/5:hover { background-color: rgba(0, 0, 0, 0.05); }

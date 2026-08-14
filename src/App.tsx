@@ -3,8 +3,8 @@ import { cn } from './utils/cn';
 import { useReveal, useSpotlight, useTilt, useActiveSection, useStickyProgress, useBodyLock } from './hooks';
 import { studioStore, CMSConfig, UserProfile } from './store/studioStore';
 import { AdminPanel } from './components/admin/AdminPanel';
+import { ClientPortal } from './components/client/ClientPortal';
 import { ProjectInquiryModal } from './components/client/ProjectInquiryModal';
-import { ClientDashboard } from './components/client/ClientDashboard';
 import { AuthModal } from './components/auth/AuthModal';
 import { ToastNotification } from './components/common/ToastNotification';
 
@@ -112,7 +112,6 @@ function ScrollProgress() {
 /* ════════════════════════════ Navbar ════════════════════════════ */
 function Nav({
   user,
-  onWatchFilm,
   onOpenInquiry,
   onOpenAuth,
   onOpenDashboard,
@@ -120,7 +119,6 @@ function Nav({
   onLogout,
 }: {
   user: UserProfile | null;
-  onWatchFilm: () => void;
   onOpenInquiry: () => void;
   onOpenAuth: (tab?: 'client' | 'admin') => void;
   onOpenDashboard: () => void;
@@ -193,22 +191,11 @@ function Nav({
                 </button>
               </div>
             ) : (
-              <>
-                <button onClick={() => onOpenAuth('client')} className="btn-ghost rounded-lg px-3 py-1.5 text-[12px] font-medium text-stone-300 flex items-center gap-1.5 focus-ring">
-                  <span>🔑 Client Login</span>
-                </button>
-                <button onClick={onGoAdmin} className="btn-ghost rounded-lg px-3 py-1.5 text-[12px] font-medium text-gold border-gold/30 flex items-center gap-1.5 focus-ring">
-                  <span>⚙️ Admin Panel</span>
-                </button>
-              </>
+              <button onClick={() => onOpenAuth('client')} className="btn-ghost rounded-lg px-3.5 py-1.5 text-[12px] font-medium text-gold border-gold/30 flex items-center gap-1.5 focus-ring">
+                <span>Sign in / Register</span>
+              </button>
             )}
 
-            <button onClick={onWatchFilm} className="btn-ghost rounded-lg px-3.5 py-1.5 text-[13px] font-medium flex items-center gap-2 focus-ring">
-              <span className="w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center text-gold">
-                <I.Play className="w-2 h-2 ml-px" />
-              </span>
-              Watch film
-            </button>
             <button onClick={onOpenInquiry} className="btn-primary rounded-lg px-3.5 py-1.5 text-[13px] font-medium flex items-center gap-1.5 focus-ring">
               Start a project
               <I.ArrowRight className="w-3.5 h-3.5" />
@@ -227,14 +214,9 @@ function Nav({
                 {l.label}
               </a>
             ))}
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => { setOpen(false); onOpenAuth('client'); }} className="flex-1 btn-ghost rounded-lg py-2 text-xs">
-                Client Login
-              </button>
-              <button onClick={() => { setOpen(false); onGoAdmin(); }} className="flex-1 btn-ghost border-gold/40 text-gold rounded-lg py-2 text-xs">
-                Admin Panel (/admin)
-              </button>
-            </div>
+            <button onClick={() => { setOpen(false); onOpenAuth('client'); }} className="btn-ghost border-gold/40 text-gold rounded-lg py-2 text-xs mt-2">
+              Sign in / Register
+            </button>
             <button onClick={() => { setOpen(false); onOpenInquiry(); }} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium mt-1 text-center">
               Start a project
             </button>
@@ -1317,7 +1299,7 @@ function FinalCTA({ onOpenInquiry, cms }: { onOpenInquiry: () => void; cms: CMSC
 }
 
 /* ════════════════════════════ Footer ════════════════════════════ */
-function Footer({ onGoAdmin, onOpenAuth }: { onGoAdmin: () => void; onOpenAuth: () => void }) {
+function Footer({ onOpenAuth }: { onOpenAuth: () => void }) {
   const cols = [
     { h: 'Services', l: ['Web Development', 'Mobile Apps', 'Product Design', 'Performance Engineering', 'MVP to Scale'] },
     { h: 'Studio', l: ['About', 'Process', 'Case Studies', 'Careers', 'Contact'] },
@@ -1368,8 +1350,7 @@ function Footer({ onGoAdmin, onOpenAuth }: { onGoAdmin: () => void; onOpenAuth: 
         <div className="pt-7 border-t hairline flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[12px] text-stone-500">© 2026 Client Found Studios LLC. All rights reserved.</p>
           <div className="flex items-center gap-5 text-[12px] text-stone-500">
-            <button onClick={onOpenAuth} className="hover:text-white transition-colors">Client Login</button>
-            <button onClick={onGoAdmin} className="text-gold hover:underline font-semibold">Admin Panel (/admin)</button>
+            <button onClick={onOpenAuth} className="hover:text-white transition-colors">Login</button>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse-dot" />
               <span className="mono text-[10px] uppercase tracking-wider">All systems operational</span>
@@ -1387,11 +1368,11 @@ export default function App() {
 
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [storeState, setStoreState] = useState(studioStore.getState());
+  const [storeReady, setStoreReady] = useState(studioStore.isReady());
   const [filmOpen, setFilmOpen] = useState(false);
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<'client' | 'admin'>('client');
-  const [dashboardOpen, setDashboardOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1399,8 +1380,14 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
 
     const unsubscribe = studioStore.subscribe(() => {
-      setStoreState(studioStore.getState());
+      setStoreState({ ...studioStore.getState() });
     });
+
+    if (!studioStore.isReady()) {
+      studioStore.init().then(() => setStoreReady(true));
+    } else {
+      setStoreReady(true);
+    }
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
@@ -1422,14 +1409,30 @@ export default function App() {
     if (user.role === 'admin') {
       navigateTo('/admin');
     } else {
-      setDashboardOpen(true);
+      navigateTo('/client');
     }
   };
 
   const isAdminRoute = currentPath.startsWith('/admin') || window.location.hash === '#/admin' || window.location.hash === '#admin';
+  const isClientRoute = currentPath.startsWith('/client') || window.location.hash === '#/client' || window.location.hash === '#client';
+
+  if (!storeReady) {
+    return (
+      <div className="min-h-screen bg-[#0a0c10] flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 rounded-full border-2 border-gold/30 border-t-gold animate-spin mx-auto" />
+          <div className="mono text-[10px] uppercase tracking-[0.25em] text-stone-500">Loading Client Found</div>
+        </div>
+      </div>
+    );
+  }
 
   if (isAdminRoute) {
     return <AdminPanel onReturnToSite={() => navigateTo('/')} />;
+  }
+
+  if (isClientRoute) {
+    return <ClientPortal onReturnToSite={() => navigateTo('/')} />;
   }
 
   return (
@@ -1443,10 +1446,9 @@ export default function App() {
 
       <Nav
         user={storeState.currentUser}
-        onWatchFilm={openFilm}
         onOpenInquiry={() => setInquiryOpen(true)}
         onOpenAuth={(tab = 'client') => { setAuthTab(tab); setAuthOpen(true); }}
-        onOpenDashboard={() => setDashboardOpen(true)}
+        onOpenDashboard={() => navigateTo('/client')}
         onGoAdmin={() => navigateTo('/admin')}
         onLogout={() => {
           studioStore.logout();
@@ -1473,7 +1475,6 @@ export default function App() {
       </main>
 
       <Footer
-        onGoAdmin={() => navigateTo('/admin')}
         onOpenAuth={() => { setAuthTab('client'); setAuthOpen(true); }}
       />
 
@@ -1482,9 +1483,7 @@ export default function App() {
       <ProjectInquiryModal
         open={inquiryOpen}
         onClose={() => setInquiryOpen(false)}
-        onSuccess={(leadId) => {
-          setToastMsg(`Inquiry ${leadId} submitted! Reviewable in Admin panel or Client workspace.`);
-        }}
+        onSuccess={() => {}}
       />
 
       <AuthModal
@@ -1493,16 +1492,6 @@ export default function App() {
         onClose={() => setAuthOpen(false)}
         onSuccess={handleAuthSuccess}
       />
-
-      {storeState.currentUser && storeState.currentUser.role === 'client' && (
-        <ClientDashboard
-          user={storeState.currentUser}
-          open={dashboardOpen}
-          onClose={() => setDashboardOpen(false)}
-          onOpenInquiry={() => { setDashboardOpen(false); setInquiryOpen(true); }}
-          onNotification={(msg) => setToastMsg(msg)}
-        />
-      )}
     </div>
   );
 }

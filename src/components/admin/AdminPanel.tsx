@@ -22,27 +22,27 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
 
   useEffect(() => {
     const unsubscribe = studioStore.subscribe(() => {
-      setStoreState(studioStore.getState());
+      setStoreState({ ...studioStore.getState() });
     });
     return unsubscribe;
   }, []);
 
   if (!storeState.isAuthenticated) {
-    return <AdminLogin onSuccess={() => setStoreState(studioStore.getState())} />;
+    return <AdminLogin onSuccess={() => setStoreState({ ...studioStore.getState() })} />;
   }
 
   const handleLogout = () => {
     studioStore.logout();
   };
 
-  const navItems = [
+  const navItems: { id: 'dashboard' | 'leads' | 'projects' | 'invoices' | 'cms' | 'logs'; label: string; icon: string; badge?: number }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'leads', label: 'Inbound Leads', icon: '📥', badge: storeState.leads.filter(l => l.status === 'New').length },
     { id: 'projects', label: 'Active Builds', icon: '🚀', badge: storeState.projects.filter(p => p.status === 'In Progress').length },
     { id: 'invoices', label: 'Invoices & Billing', icon: '💳', badge: storeState.invoices.filter(i => i.status === 'Pending').length },
     { id: 'cms', label: 'Site CMS & Slots', icon: '⚙️' },
     { id: 'logs', label: 'Audit Logs', icon: '📜' },
-  ] as const;
+  ];
 
   return (
     <div className="min-h-screen bg-[#0a0c10] text-stone-200 flex flex-col antialiased selection:bg-[#c9a86c]/30 selection:text-white">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { studioStore } from '../../store/studioStore';
 import { useBodyLock } from '../../hooks';
 
@@ -21,8 +21,51 @@ export const ProjectInquiryModal: React.FC<Props> = ({ open, onClose, onSuccess 
     timeline: '4-6 Weeks',
     description: '',
   });
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
+
+  useEffect(() => {
+    if (!open) {
+      setStep(1);
+      setSubmitted(false);
+      setSubmittedEmail('');
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        service: 'Web Development',
+        budget: '$25,000 - $50,000',
+        timeline: '4-6 Weeks',
+        description: '',
+      });
+    } else {
+      const u = studioStore.getState().currentUser;
+      if (u && u.role === 'client') {
+        setFormData((prev) => ({
+          ...prev,
+          name: u.name || prev.name,
+          email: u.email || prev.email,
+          company: u.company || prev.company,
+        }));
+      }
+    }
+  }, [open]);
 
   if (!open) return null;
+
+  const currentUser = studioStore.getState().currentUser;
+  const isClient = !!currentUser && currentUser.role === 'client';
+
+  const steps = isClient
+    ? [
+        { num: 1, label: 'Scope & Service' },
+        { num: 2, label: 'Budget & Timeline' },
+      ]
+    : [
+        { num: 1, label: 'Scope & Service' },
+        { num: 2, label: 'Budget & Timeline' },
+        { num: 3, label: 'Company Info' },
+      ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +84,9 @@ export const ProjectInquiryModal: React.FC<Props> = ({ open, onClose, onSuccess 
       description: formData.description || 'Requested detailed scope discussion.',
     });
 
+    setSubmittedEmail(formData.email);
+    setSubmitted(true);
     onSuccess(lead.id);
-    onClose();
   };
 
   const servicesList = [
@@ -55,13 +99,13 @@ export const ProjectInquiryModal: React.FC<Props> = ({ open, onClose, onSuccess 
   const budgets = ['$10,000 - $25,000', '$25,000 - $50,000', '$50,000 - $100,000', '$100,000+'];
 
   return (
-    <div className="fixed inset-0 z-[250] video-modal-backdrop flex items-center justify-center p-4 sm:p-6 animate-fade-in" role="dialog">
-      <div className="relative w-full max-w-2xl surface-strong rounded-3xl p-6 sm:p-8 gold-border shadow-2xl overflow-hidden animate-modal-in">
+    <div className="fixed inset-0 z-[250] video-modal-backdrop flex items-center justify-center overflow-y-auto p-4 sm:p-6 animate-fade-in" role="dialog">
+      <div className="relative w-full max-w-2xl surface-strong rounded-3xl p-6 sm:p-8 gold-border shadow-2xl overflow-hidden animate-modal-in flex flex-col max-h-[90vh]">
         {/* Background ambient glow */}
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#c9a86c]/10 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Header */}
-        <div className="flex items-center justify-between pb-5 border-b hairline mb-6">
+        <div className="flex-shrink-0 flex items-center justify-between pb-5 border-b hairline mb-6">
           <div>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-gold" />
@@ -77,13 +121,41 @@ export const ProjectInquiryModal: React.FC<Props> = ({ open, onClose, onSuccess 
           </button>
         </div>
 
+        <div className="flex-1 min-h-0 overflow-y-auto">
+        {submitted ? (
+          <div className="min-h-[55vh] flex flex-col items-center justify-center text-center py-8 animate-fade-in">
+            <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-lime-400/15 border-2 border-lime-400/40 flex items-center justify-center">
+              <svg className="w-8 h-8 text-lime-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Inquiry Received!</h2>
+            <p className="text-sm sm:text-base font-semibold text-stone-300 mt-3 max-w-md mx-auto leading-relaxed">
+              Your project brief has reached our lead engineers. We'll review it and get back to you within 24 hours.
+            </p>
+
+            <div className="mt-7 w-full max-w-md p-5 rounded-2xl surface border border-[#c9a86c]/30 text-left space-y-2.5">
+              <div className="flex items-center gap-2 text-[#e3c893] font-bold text-sm">
+                <span>📬</span> A confirmation email is on its way
+              </div>
+              <p className="text-xs sm:text-[13px] font-medium text-stone-300 leading-relaxed">
+                We've sent a confirmation to{' '}
+                <span className="text-white font-bold">{submittedEmail}</span>. Please check your{' '}
+                <span className="text-white font-bold">Inbox</span> — and if you don't see it within a few minutes, look in your{' '}
+                <span className="text-amber-300 font-bold">Spam / Junk folder</span> and mark it as{' '}
+                <span className="text-white font-bold">"Not Spam"</span> so our updates always reach you.
+              </p>
+            </div>
+
+            <button onClick={onClose} className="btn-gold rounded-xl px-8 py-3 text-sm font-bold mt-7">
+              Got it, thanks!
+            </button>
+          </div>
+        ) : (
+          <>
         {/* Step Indicator */}
         <div className="flex items-center justify-between gap-2 mb-8 bg-white/[0.03] p-2 rounded-xl border hairline">
-          {[
-            { num: 1, label: 'Scope & Service' },
-            { num: 2, label: 'Budget & Timeline' },
-            { num: 3, label: 'Company Info' },
-          ].map((s) => (
+          {steps.map((s) => (
             <div
               key={s.num}
               onClick={() => setStep(s.num)}
@@ -186,6 +258,13 @@ export const ProjectInquiryModal: React.FC<Props> = ({ open, onClose, onSuccess 
                 />
               </div>
 
+              {isClient && (
+                <div className="p-4 rounded-xl surface border border-[#c9a86c]/20 text-xs text-stone-300 space-y-0.5">
+                  <div className="font-semibold text-[#e3c893]">👤 Submitting as {currentUser?.name}</div>
+                  <div>{currentUser?.email} · {currentUser?.company}</div>
+                </div>
+              )}
+
               <div className="flex justify-between items-center pt-4">
                 <button
                   type="button"
@@ -195,18 +274,18 @@ export const ProjectInquiryModal: React.FC<Props> = ({ open, onClose, onSuccess 
                   ← Back
                 </button>
                 <button
-                  type="button"
-                  onClick={() => setStep(3)}
+                  type={isClient ? 'submit' : 'button'}
+                  onClick={isClient ? undefined : () => setStep(3)}
                   className="btn-gold rounded-xl px-6 py-2.5 text-xs font-semibold"
                 >
-                  Next Step →
+                  {isClient ? 'Submit Inquiry Now 🚀' : 'Next Step →'}
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 3: Contact Info & Submit */}
-          {step === 3 && (
+          {/* STEP 3: Contact Info & Submit (skipped when logged in) */}
+          {step === 3 && !isClient && (
             <div className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -268,6 +347,9 @@ export const ProjectInquiryModal: React.FC<Props> = ({ open, onClose, onSuccess 
             </div>
           )}
         </form>
+          </>
+        )}
+        </div>
       </div>
     </div>
   );

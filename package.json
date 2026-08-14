@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:server": "npm run dev --prefix server",
+    "build:server": "npm run build --prefix server",
+    "start:server": "npm run start --prefix server",
+    "build:all": "npm run build && npm run build:server",
+    "dev:all": "concurrently -n client,server -c cyan,magenta \"npm run dev\" \"npm run dev:server\""
   },
   "dependencies": {
     "clsx": "2.1.1",
@@ -20,6 +25,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.1",
+    "concurrently": "^10.0.4",
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "vite": "7.3.2",
