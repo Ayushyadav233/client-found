@@ -3,9 +3,10 @@ import { studioStore } from '../../store/studioStore';
 
 interface Props {
   onSuccess: () => void;
+  theme?: 'dark' | 'light';
 }
 
-export const AdminLogin: React.FC<Props> = ({ onSuccess }) => {
+export const AdminLogin: React.FC<Props> = ({ onSuccess, theme = 'dark' }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -25,7 +26,7 @@ export const AdminLogin: React.FC<Props> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] flex items-center justify-center p-4 relative overflow-hidden">
+    <div data-theme={theme} className="min-h-screen bg-[#0a0c10] flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
       {/* Glows */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[#c9a86c]/[0.08] rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-80 h-80 bg-[#4a5a75]/15 rounded-full blur-[120px] pointer-events-none" />

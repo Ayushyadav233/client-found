@@ -221,6 +221,11 @@ export async function allLogs(): Promise<AuditLog[]> {
   }));
 }
 
+export async function deleteLog(id: string): Promise<boolean> {
+  const { rowCount } = await pool.query('DELETE FROM logs WHERE id = $1', [id]);
+  return (rowCount ?? 0) > 0;
+}
+
 // ── Reset ──
 export async function wipeAll(q: Queryable = pool) {
   for (const table of ['users', 'clients', 'leads', 'projects', 'invoices', 'cms', 'logs']) {

@@ -373,6 +373,13 @@ class StudioStore {
     api.updateCMS(next).catch((err) => this.syncWarn('cms update', err));
   }
 
+  // ── Logs / Notifications ──
+  public deleteLog(id: string) {
+    this.state.logs = this.state.logs.filter((log) => log.id !== id);
+    this.notify();
+    api.deleteLog(id).catch((err) => this.syncWarn(`log ${id} delete`, err));
+  }
+
   // ── Reset ──
   public async resetToDefaults() {
     try {

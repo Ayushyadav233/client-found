@@ -17,6 +17,9 @@ server/data
 server/.env
 server/dist
 
+# Local SQLite databases
+data
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -6,7 +6,9 @@ import { AdminPanel } from './components/admin/AdminPanel';
 import { ClientPortal } from './components/client/ClientPortal';
 import { ProjectInquiryModal } from './components/client/ProjectInquiryModal';
 import { AuthModal } from './components/auth/AuthModal';
-import { ToastNotification } from './components/common/ToastNotification';
+import { ToastHost } from './components/common/ToastNotification';
+import { showToast } from './store/toast';
+import { LogoutIcon } from './components/common/icons';
 
 /* ════════════════════════════ Media ════════════════════════════ */
 const MEDIA = {
@@ -186,8 +188,13 @@ function Nav({
                   </button>
                 )}
                 <span className="text-xs text-stone-400 font-medium px-1">{user.name.split(' ')[0]}</span>
-                <button onClick={onLogout} className="text-stone-400 hover:text-red-400 p-1 text-xs" title="Sign Out">
-                  🚪
+                <button
+                  onClick={onLogout}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold text-stone-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-colors"
+                  title="Sign Out"
+                >
+                  <LogoutIcon className="w-3.5 h-3.5" />
+                  Sign out
                 </button>
               </div>
             ) : (
@@ -1373,7 +1380,6 @@ export default function App() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<'client' | 'admin'>('client');
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const handlePopState = () => setCurrentPath(window.location.pathname);
@@ -1405,7 +1411,7 @@ export default function App() {
   const closeFilm = useCallback(() => setFilmOpen(false), []);
 
   const handleAuthSuccess = (user: UserProfile) => {
-    setToastMsg(`Authenticated as ${user.name} (${user.role.toUpperCase()})!`);
+    showToast(`Authenticated as ${user.name} (${user.role.toUpperCase()})!`);
     if (user.role === 'admin') {
       navigateTo('/admin');
     } else {
@@ -1418,21 +1424,34 @@ export default function App() {
 
   if (!storeReady) {
     return (
-      <div className="min-h-screen bg-[#0a0c10] flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 rounded-full border-2 border-gold/30 border-t-gold animate-spin mx-auto" />
-          <div className="mono text-[10px] uppercase tracking-[0.25em] text-stone-500">Loading Client Found</div>
+      <>
+        <ToastHost />
+        <div className="min-h-screen bg-[#0a0c10] flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <div className="w-10 h-10 rounded-full border-2 border-gold/30 border-t-gold animate-spin mx-auto" />
+            <div className="mono text-[10px] uppercase tracking-[0.25em] text-stone-500">Loading Client Found</div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (isAdminRoute) {
-    return <AdminPanel onReturnToSite={() => navigateTo('/')} />;
+    return (
+      <>
+        <ToastHost />
+        <AdminPanel onReturnToSite={() => navigateTo('/')} />
+      </>
+    );
   }
 
   if (isClientRoute) {
-    return <ClientPortal onReturnToSite={() => navigateTo('/')} />;
+    return (
+      <>
+        <ToastHost />
+        <ClientPortal onReturnToSite={() => navigateTo('/')} />
+      </>
+    );
   }
 
   return (
@@ -1440,9 +1459,7 @@ export default function App() {
       <div className="noise-overlay" />
       <ScrollProgress />
 
-      {toastMsg && (
-        <ToastNotification message={toastMsg} onClose={() => setToastMsg(null)} />
-      )}
+      <ToastHost />
 
       <Nav
         user={storeState.currentUser}
@@ -1452,7 +1469,7 @@ export default function App() {
         onGoAdmin={() => navigateTo('/admin')}
         onLogout={() => {
           studioStore.logout();
-          setToastMsg('Logged out successfully.');
+          showToast('Logged out successfully.');
         }}
       />
 

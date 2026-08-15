@@ -75,4 +75,7 @@ export const api = {
   // ── CMS ──
   getCMS: () => request<{ cms: CMSConfig }>('/cms'),
   updateCMS: (cms: CMSConfig) => request<{ success: boolean; cms: CMSConfig }>('/cms', { method: 'PUT', body: JSON.stringify(cms) }),
+
+  // ── Logs / Notifications ──
+  deleteLog: (id: string) => request<{ success: boolean }>(`/logs/${id}`, { method: 'DELETE' }),
 };

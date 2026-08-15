@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { studioStore, ClientAccount } from '../../store/studioStore';
+import { showToast } from '../../store/toast';
 import { ProjectInquiryModal } from './ProjectInquiryModal';
-import { ToastNotification } from '../common/ToastNotification';
 import { ClientOverview } from './ClientOverview';
 import { ClientBuilds } from './ClientBuilds';
 import { ClientInvoices } from './ClientInvoices';
 import { ClientTeam } from './ClientTeam';
 import { ClientSettings } from './ClientSettings';
+import { LogoutIcon } from '../common/icons';
 
 interface Props {
   onReturnToSite: () => void;
@@ -17,7 +18,6 @@ type ClientTab = 'overview' | 'builds' | 'invoices' | 'team' | 'settings';
 export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
   const [storeState, setStoreState] = useState(studioStore.getState());
   const [activeTab, setActiveTab] = useState<ClientTab>('overview');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
@@ -78,15 +78,12 @@ export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
 
   const handleLogout = () => {
     studioStore.logout();
+    showToast('Logged out successfully.');
     onReturnToSite();
   };
 
   return (
     <div data-theme={theme} className="min-h-screen bg-[#0a0c10] text-stone-200 flex flex-col antialiased selection:bg-[#c9a86c]/30 selection:text-white transition-colors duration-300">
-      {toastMessage && (
-        <ToastNotification message={toastMessage} onClose={() => setToastMessage(null)} />
-      )}
-
       {/* Top Navigation Bar */}
       <header className="border-b hairline bg-[#12141a]/90 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
@@ -132,14 +129,15 @@ export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
               onClick={onReturnToSite}
               className="btn-ghost rounded-xl px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5"
             >
-              🌐 Client Site ↗
+              🌐 Home
             </button>
             <button
               onClick={handleLogout}
               className="w-9 h-9 rounded-xl surface flex items-center justify-center text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-colors"
               title="Sign Out"
+              aria-label="Sign Out"
             >
-              🚪
+              <LogoutIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -206,7 +204,7 @@ export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
             <ClientBuilds user={user} projects={clientProjects} />
           )}
           {activeTab === 'invoices' && (
-            <ClientInvoices invoices={clientInvoices} onNotification={setToastMessage} />
+            <ClientInvoices invoices={clientInvoices} onNotification={(msg) => showToast(msg)} />
           )}
           {activeTab === 'team' && (
             <ClientTeam projects={clientProjects} clientAccount={clientAccount} cms={storeState.cms} />
