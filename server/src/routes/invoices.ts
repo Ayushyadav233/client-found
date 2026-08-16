@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAdmin } from '../auth.js';
 import { addLog } from '../db.js';
 import { allInvoices, insertInvoice, updateInvoiceStatus } from '../repo.js';
+import { asyncHandler } from '../asyncHandler.js';
 
 export const invoicesRouter = Router();
 
@@ -17,11 +18,11 @@ const invoiceSchema = z.object({
   description: z.string().min(1),
 });
 
-invoicesRouter.get('/', requireAdmin, async (_req, res) => {
+invoicesRouter.get('/', requireAdmin, asyncHandler(async (_req, res) => {
   res.json({ invoices: await allInvoices() });
-});
+}));
 
-invoicesRouter.post('/', requireAdmin, async (req, res) => {
+invoicesRouter.post('/', requireAdmin, asyncHandler(async (req, res) => {
   const parsed = invoiceSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, message: parsed.error.errors[0]?.message || 'Invalid invoice data.' });
@@ -29,7 +30,7 @@ invoicesRouter.post('/', requireAdmin, async (req, res) => {
   }
   const data = parsed.data;
   const invoice = {
-    id: data.id || `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
+    id: data.id || `INV-${crypto.randomUUID()}`,
     clientName: data.clientName,
     projectName: data.projectName,
     amount: data.amount,
@@ -41,13 +42,13 @@ invoicesRouter.post('/', requireAdmin, async (req, res) => {
   await insertInvoice(invoice);
   await addLog(`Generated invoice ${invoice.id} for $${invoice.amount.toLocaleString()}`, 'invoice');
   res.json({ success: true, invoice });
-});
+}));
 
 const statusSchema = z.object({
   status: z.enum(['Paid', 'Pending', 'Overdue']),
 });
 
-invoicesRouter.patch('/:id/status', requireAdmin, async (req, res) => {
+invoicesRouter.patch('/:id/status', requireAdmin, asyncHandler(async (req, res) => {
   const parsed = statusSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, message: 'Invalid status.' });
@@ -56,4 +57,4 @@ invoicesRouter.patch('/:id/status', requireAdmin, async (req, res) => {
   await updateInvoiceStatus(req.params.id, parsed.data.status);
   await addLog(`Invoice ${req.params.id} marked as "${parsed.data.status}"`, 'invoice');
   res.json({ success: true });
-});
+}));

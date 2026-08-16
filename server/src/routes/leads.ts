@@ -4,6 +4,7 @@ import { requireAdmin } from '../auth.js';
 import { addLog } from '../db.js';
 import { sendInquiryNotification } from '../mailer.js';
 import { allLeads, getLead, insertLead, updateLeadStatus, getProject, insertProject } from '../repo.js';
+import { asyncHandler } from '../asyncHandler.js';
 import type { Project } from '../types.js';
 
 export const leadsRouter = Router();
@@ -21,11 +22,11 @@ const leadSchema = z.object({
   createdAt: z.string().optional(),
 });
 
-leadsRouter.get('/', requireAdmin, async (_req, res) => {
+leadsRouter.get('/', requireAdmin, asyncHandler(async (_req, res) => {
   res.json({ leads: await allLeads() });
-});
+}));
 
-leadsRouter.post('/', async (req, res) => {
+leadsRouter.post('/', asyncHandler(async (req, res) => {
   const parsed = leadSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, message: parsed.error.errors[0]?.message || 'Invalid lead data.' });
@@ -33,7 +34,7 @@ leadsRouter.post('/', async (req, res) => {
   }
   const data = parsed.data;
   const lead = {
-    id: data.id || `LEAD-${Math.floor(100 + Math.random() * 900)}`,
+    id: data.id || `LEAD-${crypto.randomUUID()}`,
     name: data.name,
     email: data.email,
     company: data.company,
@@ -48,13 +49,13 @@ leadsRouter.post('/', async (req, res) => {
   await addLog(`New lead submission from ${lead.company} (${lead.name})`, 'lead');
   void sendInquiryNotification(lead).catch(() => {});
   res.json({ success: true, lead });
-});
+}));
 
 const statusSchema = z.object({
   status: z.enum(['New', 'Reviewing', 'Quoted', 'Approved', 'Rejected']),
 });
 
-leadsRouter.patch('/:id/status', requireAdmin, async (req, res) => {
+leadsRouter.patch('/:id/status', requireAdmin, asyncHandler(async (req, res) => {
   const parsed = statusSchema.safeParse(req.body);
   const lead = await getLead(req.params.id);
   if (!lead) {
@@ -68,9 +69,9 @@ leadsRouter.patch('/:id/status', requireAdmin, async (req, res) => {
   await updateLeadStatus(lead.id, parsed.data.status);
   await addLog(`Lead ${lead.id} (${lead.company}) status updated to "${parsed.data.status}"`, 'lead');
   res.json({ success: true });
-});
+}));
 
-leadsRouter.post('/:id/convert', requireAdmin, async (req, res) => {
+leadsRouter.post('/:id/convert', requireAdmin, asyncHandler(async (req, res) => {
   const lead = await getLead(req.params.id);
   if (!lead) {
     res.status(404).json({ success: false, message: 'Lead not found.' });
@@ -84,7 +85,7 @@ leadsRouter.post('/:id/convert', requireAdmin, async (req, res) => {
   } else {
     const base = lead.company.toLowerCase().replace(/[^a-z0-9]/g, '');
     project = {
-      id: `PRJ-2026-${Math.floor(10 + Math.random() * 90)}`,
+      id: `PRJ-${crypto.randomUUID()}`,
       name: `${lead.company} ${lead.service}`,
       clientName: lead.name,
       clientEmail: lead.email,
@@ -112,13 +113,13 @@ leadsRouter.post('/:id/convert', requireAdmin, async (req, res) => {
   await insertProject(project);
   await addLog(`Converted lead ${lead.id} into active project ${project.id}`, 'project');
   res.json({ success: true, project });
-});
+}));
 
-leadsRouter.get('/:id', requireAdmin, async (req, res) => {
+leadsRouter.get('/:id', requireAdmin, asyncHandler(async (req, res) => {
   const lead = await getLead(req.params.id);
   if (!lead) {
     res.status(404).json({ success: false, message: 'Lead not found.' });
     return;
   }
   res.json({ lead });
-});
+}));

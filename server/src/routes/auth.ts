@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireAuth, setSessionCookie, clearSessionCookie, signToken, readToken, AuthedRequest } from '../auth.js';
 import { addLog, getUserByEmail, getUserById, insertUser, pool } from '../db.js';
 import { insertClient, toProfile } from '../repo.js';
+import { asyncHandler } from '../asyncHandler.js';
 
 export const authRouter = Router();
 
@@ -14,7 +15,7 @@ const registerSchema = z.object({
   company: z.string().max(100).optional(),
 });
 
-authRouter.post('/register', async (req, res) => {
+authRouter.post('/register', asyncHandler(async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, message: parsed.error.errors[0]?.message || 'Invalid registration data.' });
@@ -58,14 +59,14 @@ authRouter.post('/register', async (req, res) => {
   setSessionCookie(req, res, signToken(user.id, user.role));
   await addLog(`New client account registered: ${user.email} (${user.company || 'N/A'})`, 'auth', user.name);
   res.json({ success: true, user: toProfile(user) });
-});
+}));
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 
-authRouter.post('/login', async (req, res) => {
+authRouter.post('/login', asyncHandler(async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, message: 'Invalid email or password.' });
@@ -81,9 +82,9 @@ authRouter.post('/login', async (req, res) => {
   setSessionCookie(req, res, signToken(user.id, user.role));
   await addLog(`User ${user.email} (${user.role}) logged in successfully`, 'auth', user.name);
   res.json({ success: true, user: toProfile(user) });
-});
+}));
 
-authRouter.post('/admin', async (req, res) => {
+authRouter.post('/admin', asyncHandler(async (req, res) => {
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
   const { rows } = await pool.query(`SELECT * FROM users WHERE role = 'admin' ORDER BY joined_date ASC LIMIT 1`);
   const admin = rows[0] as
@@ -103,16 +104,16 @@ authRouter.post('/admin', async (req, res) => {
   setSessionCookie(req, res, signToken(user.id, user.role));
   await addLog('Master Admin authenticated into console', 'auth', user.name);
   res.json({ success: true, user: toProfile(user) });
-});
+}));
 
-authRouter.post('/logout', async (req, res) => {
+authRouter.post('/logout', asyncHandler(async (req, res) => {
   const payload = readToken(req);
   if (payload) await addLog('User logged out', 'auth');
   clearSessionCookie(res);
   res.json({ success: true });
-});
+}));
 
-authRouter.get('/me', requireAuth, async (req: AuthedRequest, res) => {
+authRouter.get('/me', requireAuth, asyncHandler(async (req: AuthedRequest, res) => {
   const user = await getUserById(req.userId!);
   if (!user) {
     clearSessionCookie(res);
@@ -120,4 +121,4 @@ authRouter.get('/me', requireAuth, async (req: AuthedRequest, res) => {
     return;
   }
   res.json({ success: true, user: toProfile(user) });
-});
+}));

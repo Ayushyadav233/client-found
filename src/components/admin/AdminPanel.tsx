@@ -74,7 +74,7 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
 
   const unreadLogs = storeState.logs.filter((log) => !readLogIds.includes(log.id));
 
-  if (!storeState.isAuthenticated) {
+  if (storeState.currentUser?.role !== 'admin') {
     return <AdminLogin theme={theme} onSuccess={() => setStoreState({ ...studioStore.getState() })} />;
   }
 

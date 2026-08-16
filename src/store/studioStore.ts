@@ -151,7 +151,7 @@ class StudioStore {
     this.state = emptyState();
   }
 
-  public async init(): Promise<void> {
+  private async loadState(): Promise<void> {
     try {
       const res = await api.getState();
       this.state = { ...res.state, cms: res.state.cms || EMPTY_CMS };
@@ -163,6 +163,11 @@ class StudioStore {
         this.state = emptyState();
       }
     }
+    this.notify();
+  }
+
+  public async init(): Promise<void> {
+    await this.loadState();
     this.ready = true;
     this.notify();
   }
@@ -198,6 +203,7 @@ class StudioStore {
         return { success: false, message: res.message || 'Invalid email or password.' };
       }
       this.applyUser(res.user);
+      await this.loadState();
       return { success: true, user: res.user };
     } catch (err) {
       return { success: false, message: (err as Error).message || 'Invalid email or password.' };
@@ -211,6 +217,7 @@ class StudioStore {
         return { success: false, message: res.message || 'Registration failed.' };
       }
       this.applyUser(res.user);
+      await this.loadState();
       return { success: true, user: res.user };
     } catch (err) {
       return { success: false, message: (err as Error).message || 'Registration failed.' };
@@ -222,6 +229,7 @@ class StudioStore {
       const res = await api.adminLogin(password);
       if (!res.success || !res.user) return false;
       this.applyUser(res.user);
+      await this.loadState();
       return true;
     } catch (err) {
       console.warn('[store] Admin login failed:', err);
@@ -231,7 +239,7 @@ class StudioStore {
 
   private applyUser(user: UserProfile) {
     this.state.currentUser = user;
-    this.state.isAuthenticated = user.role === 'admin';
+    this.state.isAuthenticated = true;
     this.notify();
   }
 
@@ -244,13 +252,14 @@ class StudioStore {
     } catch (err) {
       this.syncWarn('logout', err);
     }
+    await this.loadState();
   }
 
   // ── Leads ──
   public addLead(leadData: Omit<Lead, 'id' | 'createdAt' | 'status'>): Lead {
     const newLead: Lead = {
       ...leadData,
-      id: `LEAD-${Math.floor(100 + Math.random() * 900)}`,
+      id: `LEAD-${crypto.randomUUID()}`,
       status: 'New',
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
     };
@@ -277,7 +286,7 @@ class StudioStore {
 
     const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
     const newProject: Project = {
-      id: `PRJ-2026-${Math.floor(10 + Math.random() * 90)}`,
+      id: `PRJ-${crypto.randomUUID()}`,
       name: `${lead.company} ${lead.service}`,
       clientName: lead.name,
       clientEmail: lead.email,
@@ -311,7 +320,7 @@ class StudioStore {
   public addProject(project: Omit<Project, 'id' | 'updatedAt'>): Project {
     const newPrj: Project = {
       ...project,
-      id: `PRJ-2026-${Math.floor(10 + Math.random() * 90)}`,
+      id: `PRJ-${crypto.randomUUID()}`,
       updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
     };
     this.state.projects.unshift(newPrj);
@@ -349,7 +358,7 @@ class StudioStore {
   public addInvoice(inv: Omit<Invoice, 'id' | 'issuedDate'>): Invoice {
     const newInv: Invoice = {
       ...inv,
-      id: `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
+      id: `INV-${crypto.randomUUID()}`,
       issuedDate: new Date().toISOString().slice(0, 10),
     };
     this.state.invoices.unshift(newInv);
