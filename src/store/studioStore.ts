@@ -269,12 +269,13 @@ class StudioStore {
     }
   }
 
-  public convertLeadToProject(leadId: string): Project | null {
+  public convertLeadToProject(leadId: string, overrides?: Partial<Project>): Project | null {
     const lead = this.state.leads.find((l) => l.id === leadId);
     if (!lead) return null;
 
     lead.status = 'Approved';
 
+    const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
     const newProject: Project = {
       id: `PRJ-2026-${Math.floor(10 + Math.random() * 90)}`,
       name: `${lead.company} ${lead.service}`,
@@ -285,8 +286,8 @@ class StudioStore {
       status: 'In Progress',
       budget: lead.budget,
       dueDate: new Date(Date.now() + 45 * 86400000).toISOString().slice(0, 10),
-      stagingUrl: `https://${lead.company.toLowerCase().replace(/[^a-z0-9]/g, '')}-dev.clientfound.app`,
-      githubRepo: `github.com/clientfound/${lead.company.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      stagingUrl: `https://${slug(lead.company)}-dev.clientfound.app`,
+      githubRepo: `github.com/clientfound/${slug(lead.company)}`,
       updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
       team: [
         { name: 'Ana S.', role: 'Lead Engineer', avatarBg: 'bg-[#c9a86c]' },
@@ -297,6 +298,7 @@ class StudioStore {
         { id: `m-${Date.now()}-2`, title: 'Core Architecture & API Integrations', completed: false, dueDate: 'Week 3' },
         { id: `m-${Date.now()}-3`, title: 'QA Testing & Final Deployment', completed: false, dueDate: 'Week 5' },
       ],
+      ...overrides,
     };
 
     this.state.projects.unshift(newProject);

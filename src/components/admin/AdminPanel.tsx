@@ -21,6 +21,7 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [readLogIds, setReadLogIds] = useState<string[]>([]);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [popoverStyle, setPopoverStyle] = useState<{ top: number; left: number } | null>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,9 +47,30 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
         setShowNotifications(false);
       }
     };
+    const handleResize = () => setShowNotifications(false);
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [showNotifications]);
+
+  const toggleNotifications = () => {
+    if (showNotifications) {
+      setShowNotifications(false);
+      return;
+    }
+    if (notificationsRef.current) {
+      const rect = notificationsRef.current.getBoundingClientRect();
+      const width = Math.min(288, window.innerWidth - 16);
+      setPopoverStyle({
+        top: rect.bottom + 8,
+        left: Math.max(8, rect.right - width),
+      });
+    }
+    setShowNotifications(true);
+  };
 
   const unreadLogs = storeState.logs.filter((log) => !readLogIds.includes(log.id));
 
@@ -106,7 +128,7 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
             {/* Notifications Popover */}
             <div className="relative" ref={notificationsRef}>
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={toggleNotifications}
                 className="w-9 h-9 rounded-xl surface flex items-center justify-center text-stone-300 hover:text-white transition-colors relative"
                 aria-label="Notifications"
               >
@@ -118,8 +140,11 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
                 )}
               </button>
 
-              {showNotifications && (
-                <div className="absolute top-full right-0 mt-2 w-72 surface-strong rounded-2xl p-4 shadow-2xl shadow-black/60 space-y-3 z-[100] animate-modal-in">
+              {showNotifications && popoverStyle && (
+                <div
+                  className="fixed w-72 max-w-[calc(100vw-16px)] surface-strong rounded-2xl p-4 shadow-2xl shadow-black/60 space-y-3 z-[100] animate-modal-in"
+                  style={popoverStyle}
+                >
                   <div className="flex items-center justify-between pb-2 border-b hairline">
                     <span className="text-xs font-bold text-white">System Notifications</span>
                     <div className="flex items-center gap-2">
@@ -255,7 +280,12 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
         {/* Content Area */}
         <main className="flex-1 min-w-0">
           {activeTab === 'dashboard' && <DashboardOverview onNavigate={(t) => setActiveTab(t as any)} />}
-          {activeTab === 'leads' && <LeadsManager onNotification={(msg) => showToast(msg)} />}
+          {activeTab === 'leads' && (
+            <LeadsManager
+              onNotification={(msg) => showToast(msg)}
+              onOpenProject={() => setActiveTab('projects')}
+            />
+          )}
           {activeTab === 'projects' && <ProjectsManager onNotification={(msg) => showToast(msg)} />}
           {activeTab === 'invoices' && <InvoicesManager onNotification={(msg) => showToast(msg)} />}
           {activeTab === 'cms' && <CMSManager onNotification={(msg) => showToast(msg)} />}
