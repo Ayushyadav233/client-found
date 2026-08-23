@@ -14,6 +14,9 @@ import { cmsRouter } from './routes/cms.js';
 import { clientsRouter } from './routes/clients.js';
 import { logsRouter } from './routes/logs.js';
 import { stateRouter } from './routes/state.js';
+import { appConfigRouter } from './routes/appConfig.js';
+import { chatRouter } from './routes/chat.js';
+import { assetsRouter } from './routes/assets.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,6 +64,9 @@ export function createApp(): express.Express {
   app.use('/api/clients', clientsRouter);
   app.use('/api/logs', logsRouter);
   app.use('/api/state', stateRouter);
+  app.use('/api/app-config', appConfigRouter);
+  app.use('/api/chat', chatRouter);
+  app.use('/api/assets', assetsRouter);
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ error: 'Not found.' });

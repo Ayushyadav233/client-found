@@ -116,6 +116,66 @@ export async function initSchema() {
       action TEXT NOT NULL,
       type TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS app_configs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      project_id TEXT,
+      client_name TEXT NOT NULL,
+      client_email TEXT NOT NULL,
+      company_name TEXT NOT NULL,
+      app_name TEXT NOT NULL,
+      app_type TEXT NOT NULL,
+      tagline TEXT NOT NULL,
+      primary_color TEXT NOT NULL,
+      accent_color TEXT NOT NULL,
+      theme TEXT NOT NULL DEFAULT 'dark',
+      icon TEXT NOT NULL,
+      features TEXT NOT NULL DEFAULT '[]',
+      platforms TEXT NOT NULL DEFAULT '[]',
+      estimated_cost TEXT NOT NULL,
+      estimated_weeks TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'Submitted',
+      created_at TEXT NOT NULL,
+      notes TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_threads (
+      id TEXT PRIMARY KEY,
+      client_name TEXT NOT NULL,
+      client_email TEXT NOT NULL,
+      company TEXT,
+      subject TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'General',
+      status TEXT NOT NULL DEFAULT 'Open',
+      last_message TEXT NOT NULL DEFAULT '',
+      last_message_at TEXT NOT NULL,
+      unread_count_client INTEGER NOT NULL DEFAULT 0,
+      unread_count_admin INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id TEXT PRIMARY KEY,
+      thread_id TEXT NOT NULL,
+      sender_name TEXT NOT NULL,
+      sender_email TEXT NOT NULL,
+      sender_role TEXT NOT NULL CHECK (sender_role IN ('client', 'admin', 'visitor')),
+      content TEXT NOT NULL,
+      timestamp TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS project_assets (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL CHECK (category IN ('design', 'build', 'code', 'document', 'brand')),
+      url TEXT NOT NULL,
+      file_size TEXT,
+      version TEXT,
+      uploaded_by TEXT NOT NULL DEFAULT 'ClientFound Studio',
+      created_at TEXT NOT NULL
+    );
   `);
 }
 

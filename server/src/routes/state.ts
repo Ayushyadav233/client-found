@@ -3,7 +3,21 @@ import { requireAdmin, requireAuth, AuthedRequest } from '../auth.js';
 import { getUserById, runInTransaction } from '../db.js';
 import { seedIfEmpty } from '../seed.js';
 import {
-  allClients, allInvoices, allLeads, allLogs, allProjects, allUsers, getCMS, toProfile, wipeAll,
+  allAppConfigs,
+  allAssets,
+  allChatThreads,
+  allClients,
+  allInvoices,
+  allLeads,
+  allLogs,
+  allProjects,
+  allUsers,
+  getAppConfigsByEmail,
+  getAssetsByProjectId,
+  getChatThreadsByEmail,
+  getCMS,
+  toProfile,
+  wipeAll,
 } from '../repo.js';
 import { asyncHandler } from '../asyncHandler.js';
 
@@ -17,7 +31,7 @@ stateRouter.get('/', requireAuth, asyncHandler(async (req: AuthedRequest, res) =
   }
 
   if (user.role === 'admin') {
-    const [cms, users, leads, projects, invoices, clients, logs] = await Promise.all([
+    const [cms, users, leads, projects, invoices, clients, logs, appConfigs, chatThreads, assets] = await Promise.all([
       getCMS(),
       allUsers(),
       allLeads(),
@@ -25,6 +39,9 @@ stateRouter.get('/', requireAuth, asyncHandler(async (req: AuthedRequest, res) =
       allInvoices(),
       allClients(),
       allLogs(),
+      allAppConfigs(),
+      allChatThreads(),
+      allAssets(),
     ]);
     res.json({
       success: true,
@@ -38,6 +55,9 @@ stateRouter.get('/', requireAuth, asyncHandler(async (req: AuthedRequest, res) =
         clients,
         cms,
         logs,
+        appConfigs,
+        chatThreads,
+        assets,
       },
     });
     return;
@@ -70,6 +90,15 @@ stateRouter.get('/', requireAuth, asyncHandler(async (req: AuthedRequest, res) =
       (company !== '' && c.company.toLowerCase().includes(company))
   );
 
+  const ownProjectIds = ownProjects.map((p) => p.id);
+  const [ownAppConfigs, ownChatThreads, ownAssetsNested] = await Promise.all([
+    getAppConfigsByEmail(email),
+    getChatThreadsByEmail(email),
+    Promise.all(ownProjectIds.map((pid) => getAssetsByProjectId(pid))),
+  ]);
+
+  const ownAssets = ownAssetsNested.flat();
+
   res.json({
     success: true,
     state: {
@@ -82,6 +111,9 @@ stateRouter.get('/', requireAuth, asyncHandler(async (req: AuthedRequest, res) =
       clients: ownClients,
       cms,
       logs: [],
+      appConfigs: ownAppConfigs,
+      chatThreads: ownChatThreads,
+      assets: ownAssets,
     },
   });
 }));
