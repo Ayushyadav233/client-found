@@ -6,6 +6,9 @@ import { AdminPanel } from './components/admin/AdminPanel';
 import { ClientPortal } from './components/client/ClientPortal';
 import { ProjectInquiryModal } from './components/client/ProjectInquiryModal';
 import { AuthModal } from './components/auth/AuthModal';
+import { AppConfiguratorModal } from './components/configurator/AppConfiguratorModal';
+import { MobileAppSimulator } from './components/configurator/MobileAppSimulator';
+import { DirectChatWidget } from './components/common/DirectChatWidget';
 import { ToastHost } from './components/common/ToastNotification';
 import { showToast } from './store/toast';
 import { LogoutIcon } from './components/common/icons';
@@ -235,71 +238,40 @@ function Nav({
 }
 
 /* ════════════════════════════ Hero ════════════════════════════ */
-function Hero({ onWatchFilm, onOpenInquiry, cms }: { onWatchFilm: () => void; onOpenInquiry: () => void; cms: CMSConfig }) {
+function Hero({
+  onWatchFilm,
+  onOpenInquiry,
+  cms,
+}: {
+  onWatchFilm: () => void;
+  onOpenInquiry: () => void;
+  cms: CMSConfig;
+}) {
   const spotlightRef = useSpotlight();
   const tiltRef = useTilt(4);
 
   return (
-    <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-24 overflow-hidden spotlight-container" ref={spotlightRef}>
+    <section className="py-20 sm:py-28 relative overflow-hidden spotlight-container border-b hairline" ref={spotlightRef}>
       <div className="spotlight-glow" />
       <div className="absolute inset-0 bg-grid-fine [mask-image:radial-gradient(ellipse_at_center,black_10%,transparent_70%)]" />
       <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[#c9a86c]/[0.06] rounded-full blur-[140px]" />
       <div className="absolute top-32 -left-32 w-[420px] h-[420px] bg-[#4a5a75]/20 rounded-full blur-[120px]" />
 
       <div className="relative max-w-6xl mx-auto px-5 sm:px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="reveal inline-flex items-center gap-2.5 surface rounded-full pl-2 pr-4 py-1.5 mb-8">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-lime-400/10 text-lime-300 px-2.5 py-0.5 rounded-full border border-lime-400/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse-dot" />
-              Available
-            </span>
-            <span className="text-[12px] text-stone-400">{cms.openSlotsText}</span>
-          </div>
-
-          <h1 className="reveal stagger-1 text-[40px] sm:text-[58px] md:text-[70px] font-bold tracking-[-0.035em] leading-[1.02] text-stone-50 text-balance mb-6">
+        <div className="max-w-3xl mx-auto text-center mb-3">
+          <h1 className="reveal stagger-1 text-[32px] sm:text-[46px] md:text-[56px] font-bold tracking-[-0.035em] leading-[1.05] text-stone-50 text-balance mb-2">
             {cms.heroTitle}
             <br />
             <span className="text-brand">{cms.heroHighlight}</span>
           </h1>
 
-          <p className="reveal stagger-2 text-[16px] sm:text-lg text-stone-400 max-w-xl mx-auto leading-relaxed mb-10 text-pretty">
+          <p className="reveal stagger-2 text-[14px] sm:text-[15px] text-stone-400 max-w-lg mx-auto leading-relaxed text-pretty">
             {cms.heroSubtitle}
           </p>
-
-          <div className="reveal stagger-3 flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
-            <button onClick={onOpenInquiry} className="btn-primary rounded-xl px-7 py-3.5 text-[15px] font-semibold w-full sm:w-auto flex items-center justify-center gap-2 focus-ring">
-              Start your project
-              <I.ArrowRight className="w-4 h-4" />
-            </button>
-            <button onClick={onWatchFilm} className="btn-ghost rounded-xl px-7 py-3.5 text-[15px] font-semibold w-full sm:w-auto flex items-center justify-center gap-2.5 focus-ring">
-              <span className="w-7 h-7 rounded-full bg-gold/15 border border-[#c9a86c]/30 flex items-center justify-center text-gold">
-                <I.Play className="w-3 h-3 ml-px" />
-              </span>
-              Watch the film
-              <span className="text-[11px] text-stone-500 mono">1:36</span>
-            </button>
-          </div>
-
-          <div className="reveal stagger-4 flex flex-col items-center gap-4">
-            <div className="flex items-center -space-x-2">
-              {['JM', 'AS', 'RK', 'LC', 'TW'].map((ini, i) => (
-                <div key={i} className={cn('w-8 h-8 rounded-full border-2 border-[#0a0c10] flex items-center justify-center text-[10px] font-bold text-[#141310]', ['bg-[#c9a86c]', 'bg-[#8fa3b8]', 'bg-[#b8927a]', 'bg-[#9caf88]', 'bg-[#a08fb4]'][i])}>
-                  {ini}
-                </div>
-              ))}
-              <div className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-stone-800 flex items-center justify-center text-[10px] font-semibold text-stone-300">+48</div>
-            </div>
-            <div className="flex items-center gap-2 text-[13px] text-stone-400">
-              <div className="flex gap-0.5 text-[#e3c893]">
-                {[...Array(5)].map((_, i) => <I.Star key={i} className="w-3.5 h-3.5" />)}
-              </div>
-              <span><span className="text-stone-200 font-medium">4.9/5</span> rated by 53 verified founders</span>
-            </div>
-          </div>
         </div>
 
-        {/* Tilt dashboard */}
-        <div className="reveal stagger-5 mt-20 relative device-3d" ref={tiltRef}>
+        {/* Tilt dashboard - Main Landing Page Centerpiece */}
+        <div className="reveal stagger-3 relative device-3d" ref={tiltRef}>
           <div className="absolute -inset-x-20 -inset-y-10 bg-gradient-to-b from-[#c9a86c]/10 via-transparent to-transparent blur-2xl pointer-events-none" />
           <div className="relative chrome-window rounded-xl overflow-hidden surface-strong gold-border">
             <div className="flex items-center gap-2 px-4 py-2.5 border-b hairline bg-[#12141a]/80">
@@ -444,6 +416,230 @@ function Logos() {
             {[...names, ...names].map((n, i) => (
               <span key={i} className="text-2xl font-bold text-stone-700 hover:text-stone-400 transition-colors duration-300 tracking-tight flex-shrink-0">{n}</span>
             ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ════════════════════════════ Personal App Interactive Showcase ════════════════════════════ */
+function PersonalAppShowcase({
+  onOpenConfigurator,
+  onOpenInquiry,
+}: {
+  onOpenConfigurator: () => void;
+  onOpenInquiry: () => void;
+}) {
+  const [activePreset, setActivePreset] = useState<number>(0);
+  const presets = [
+    {
+      appName: 'Apex Guild',
+      appType: 'Creator Community',
+      subtitle: 'VIP Paywalls & Chat',
+      tagline: 'Private network for pro creators and founders',
+      primaryColor: '#c9a86c',
+      accentColor: '#e3c893',
+      theme: 'dark' as const,
+      icon: 'crown',
+      emoji: '👑',
+      glowColor: 'rgba(201, 168, 108, 0.25)',
+      features: ['User Auth & SSO', 'Push Alerts', 'In-App Chat', 'Paywalls & Subscriptions'],
+      platforms: ['iOS App Store', 'Android Play Store', 'PWA Web App'],
+    },
+    {
+      appName: 'Velocity Fit',
+      appType: 'Fitness & Coaching',
+      subtitle: 'Workouts & Apple Health',
+      tagline: 'Hyper-personalized athletic performance coaching',
+      primaryColor: '#10b981',
+      accentColor: '#6ee7b7',
+      theme: 'dark' as const,
+      icon: 'fitness',
+      emoji: '⚡',
+      glowColor: 'rgba(16, 185, 129, 0.25)',
+      features: ['Workout Streak', '1-on-1 Booking', 'Push Alerts', 'Apple Health Sync'],
+      platforms: ['iOS App Store', 'Android Play Store'],
+    },
+    {
+      appName: 'Maison Noir',
+      appType: 'E-Commerce Store',
+      subtitle: 'Drops & Apple Pay',
+      tagline: 'Curated luxury apparel drops & Apple Pay checkout',
+      primaryColor: '#f43f5e',
+      accentColor: '#fda4af',
+      theme: 'light' as const,
+      icon: 'cart',
+      emoji: '🛍️',
+      glowColor: 'rgba(244, 63, 94, 0.25)',
+      features: ['Apple Pay Checkout', 'Push Drops', 'Real-time Stock', 'VIP Tiers'],
+      platforms: ['iOS App Store', 'Android Play Store', 'PWA Web App'],
+    },
+  ];
+
+  const current = presets[activePreset];
+
+  return (
+    <section className="pt-28 sm:pt-36 pb-20 sm:pb-24 relative overflow-hidden bg-[#07090e] border-b hairline">
+      {/* Dynamic ambient backdrop that reacts to current archetype color */}
+      <div
+        className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full blur-[160px] pointer-events-none transition-all duration-700 opacity-60"
+        style={{ background: current.glowColor }}
+      />
+      <div className="absolute inset-0 bg-grid-fine opacity-40 [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_75%)] pointer-events-none" />
+
+      <div className="max-w-6xl mx-auto px-5 sm:px-6 relative">
+        <div className="grid lg:grid-cols-12 gap-12 items-center">
+          {/* Left Controls & Narrative (7 cols) */}
+          <div className="lg:col-span-7 space-y-7">
+            {/* Header Badge */}
+            <div className="inline-flex items-center gap-2.5 surface-strong px-4 py-1.5 rounded-full text-[11px] font-bold text-gold border border-gold/30 shadow-lg shadow-gold/10">
+              <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
+              <span className="tracking-wide uppercase">Next-Gen Personal App Studio</span>
+            </div>
+
+            {/* Main Title */}
+            <div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-[1.06]">
+                Your Brand. Your Features.<br />
+                <span className="text-brand">Your Personal App.</span>
+              </h2>
+              <p className="text-stone-400 text-sm sm:text-base leading-relaxed max-w-xl mt-3.5">
+                Whether you need a private community, coaching app, or mobile storefront — select an archetype below to watch the live phone simulator adapt instantly.
+              </p>
+            </div>
+
+            {/* Interactive Archetype Selector Tabs */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="mono text-[11px] uppercase tracking-[0.2em] font-semibold text-stone-400">
+                  Select Archetype to Simulate:
+                </span>
+                <span className="text-[11px] text-gold/80 font-medium">⚡ Click to test drive</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {presets.map((p, idx) => {
+                  const isActive = activePreset === idx;
+                  return (
+                    <button
+                      key={p.appName}
+                      onClick={() => setActivePreset(idx)}
+                      className={cn(
+                        'group relative p-3.5 rounded-2xl text-left transition-all duration-300 border flex flex-col justify-between overflow-hidden cursor-pointer',
+                        isActive
+                          ? 'surface-strong border-gold shadow-[0_0_25px_rgba(201,168,108,0.25)] scale-[1.02]'
+                          : 'surface border-white/10 hover:border-white/25 hover:bg-white/[0.04] hover:scale-[1.01]'
+                      )}
+                    >
+                      {/* Active glowing accent line */}
+                      {isActive && (
+                        <div
+                          className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-gold via-[#fce7c8] to-gold"
+                        />
+                      )}
+
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xl p-1.5 rounded-xl bg-white/5 border border-white/10 group-hover:scale-110 transition-transform">
+                          {p.emoji}
+                        </span>
+                        {isActive ? (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-ping" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-stone-500 font-mono">#{idx + 1}</span>
+                        )}
+                      </div>
+
+                      <div>
+                        <div className={cn('text-xs font-bold transition-colors', isActive ? 'text-white' : 'text-stone-300 group-hover:text-white')}>
+                          {p.appType}
+                        </div>
+                        <div className="text-[10px] text-stone-500 truncate mt-0.5">
+                          {p.subtitle}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Feature Modules Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+              {[
+                { icon: '📱', title: 'iOS & Android', desc: 'Swift & Kotlin Native', tag: 'Store Ready' },
+                { icon: '⚡', title: 'Instant PWA', desc: 'Zero store friction', tag: 'No Install' },
+                { icon: '💳', title: 'In-App Paywalls', desc: 'Stripe & Apple Pay', tag: 'Monetize' },
+                { icon: '🔔', title: 'Push Alerts', desc: 'Direct engagement', tag: 'Retention' },
+                { icon: '🛡️', title: 'Admin Command', desc: 'User & content desk', tag: 'Full Control' },
+                { icon: '🌐', title: 'Custom Domain', desc: 'White-labeled DNS', tag: '100% Yours' },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="p-3 rounded-2xl surface border hairline hover:border-gold/30 hover:bg-white/[0.04] transition-all group cursor-default"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-base">{item.icon}</span>
+                    <span className="mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-stone-400 group-hover:text-gold group-hover:bg-gold/10 transition-colors">
+                      {item.tag}
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold text-white group-hover:text-gold transition-colors">{item.title}</div>
+                  <div className="text-[10px] text-stone-500 mt-0.5">{item.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* High Impact Action Buttons */}
+            <div className="pt-3 space-y-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
+                {/* Primary Pulsing Gold CTA */}
+                <button
+                  onClick={onOpenConfigurator}
+                  className="group relative overflow-hidden rounded-2xl px-8 py-4 font-extrabold text-sm text-[#0a0c10] bg-gradient-to-r from-[#e8d5b0] via-[#c9a86c] to-[#d8ba7d] shadow-[0_0_30px_rgba(201,168,108,0.35)] hover:shadow-[0_0_50px_rgba(201,168,108,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer"
+                >
+                  {/* Sweeping light shimmer effect */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
+
+                  <span className="text-base">🛠️</span>
+                  <span>Design Your Personal App</span>
+                  <I.ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                </button>
+
+                {/* Secondary Inquire Button */}
+                <button
+                  onClick={onOpenInquiry}
+                  className="rounded-2xl px-6 py-4 font-bold text-xs text-stone-200 surface-strong border border-white/15 hover:border-gold/60 hover:text-white hover:bg-white/[0.08] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Start Project Inquiry</span>
+                  <span className="text-gold">→</span>
+                </button>
+              </div>
+
+              {/* Subtitle Guarantee Tag */}
+              <div className="flex items-center gap-2 text-stone-500 text-[11px] mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse-dot" />
+                <span>Real-time dynamic cost & timeline calculator · Zero commitment</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Phone Simulator (5 cols) */}
+          <div className="lg:col-span-5 flex justify-center device-3d">
+            <MobileAppSimulator
+              appName={current.appName}
+              appType={current.appType}
+              tagline={current.tagline}
+              primaryColor={current.primaryColor}
+              accentColor={current.accentColor}
+              theme={current.theme}
+              icon={current.icon}
+              features={current.features}
+              platforms={current.platforms}
+            />
           </div>
         </div>
       </div>
@@ -1378,6 +1574,7 @@ export default function App() {
   const [storeReady, setStoreReady] = useState(studioStore.isReady());
   const [filmOpen, setFilmOpen] = useState(false);
   const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [configuratorOpen, setConfiguratorOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<'client' | 'admin'>('client');
 
@@ -1441,6 +1638,7 @@ export default function App() {
       <>
         <ToastHost />
         <AdminPanel onReturnToSite={() => navigateTo('/')} />
+        <DirectChatWidget />
       </>
     );
   }
@@ -1450,6 +1648,7 @@ export default function App() {
       <>
         <ToastHost />
         <ClientPortal onReturnToSite={() => navigateTo('/')} />
+        <DirectChatWidget />
       </>
     );
   }
@@ -1474,12 +1673,16 @@ export default function App() {
       />
 
       <main>
+        <PersonalAppShowcase
+          onOpenConfigurator={() => setConfiguratorOpen(true)}
+          onOpenInquiry={() => setInquiryOpen(true)}
+        />
+        <Logos />
         <Hero
           onWatchFilm={openFilm}
           onOpenInquiry={() => setInquiryOpen(true)}
           cms={storeState.cms}
         />
-        <Logos />
         <ImmersiveFilm onWatchFilm={openFilm} cms={storeState.cms} />
         <Services />
         <Work onOpenInquiry={() => setInquiryOpen(true)} />
@@ -1503,12 +1706,22 @@ export default function App() {
         onSuccess={() => {}}
       />
 
+      <AppConfiguratorModal
+        open={configuratorOpen}
+        onClose={() => setConfiguratorOpen(false)}
+        onSuccess={() => {}}
+      />
+
       <AuthModal
         open={authOpen}
         initialTab={authTab}
         onClose={() => setAuthOpen(false)}
         onSuccess={handleAuthSuccess}
       />
+
+      <DirectChatWidget
+        onOpenAuth={() => { setAuthTab('client'); setAuthOpen(true); }}
+      />
     </div>
   );
-}
+}

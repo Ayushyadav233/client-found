@@ -5,20 +5,23 @@ import { ProjectInquiryModal } from './ProjectInquiryModal';
 import { ClientOverview } from './ClientOverview';
 import { ClientBuilds } from './ClientBuilds';
 import { ClientInvoices } from './ClientInvoices';
+import { ClientAssets } from './ClientAssets';
 import { ClientTeam } from './ClientTeam';
 import { ClientSettings } from './ClientSettings';
+import { AppConfiguratorModal } from '../configurator/AppConfiguratorModal';
 import { LogoutIcon } from '../common/icons';
 
 interface Props {
   onReturnToSite: () => void;
 }
 
-type ClientTab = 'overview' | 'builds' | 'invoices' | 'team' | 'settings';
+type ClientTab = 'overview' | 'builds' | 'invoices' | 'assets' | 'team' | 'settings';
 
 export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
   const [storeState, setStoreState] = useState(studioStore.getState());
   const [activeTab, setActiveTab] = useState<ClientTab>('overview');
   const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [configuratorOpen, setConfiguratorOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
@@ -72,6 +75,7 @@ export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'builds', label: 'My Builds', icon: '🚀', badge: clientProjects.filter((p) => p.status !== 'Shipped').length },
     { id: 'invoices', label: 'Invoices & Payments', icon: '💳', badge: clientInvoices.filter((i) => i.status === 'Pending').length },
+    { id: 'assets', label: 'Assets & Deliverables', icon: '📦', badge: storeState.assets.length },
     { id: 'team', label: 'Team & Support', icon: '🤝' },
     { id: 'settings', label: 'Account Settings', icon: '⚙️' },
   ];
@@ -120,10 +124,16 @@ export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
               )}
             </button>
             <button
+              onClick={() => setConfiguratorOpen(true)}
+              className="btn-ghost rounded-xl px-3.5 py-2 text-xs font-semibold text-gold border-gold/40 flex items-center gap-1.5"
+            >
+              🛠️ Design App
+            </button>
+            <button
               onClick={() => setInquiryOpen(true)}
               className="btn-gold rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
             >
-              + Request New Build
+              + Request Build
             </button>
             <button
               onClick={onReturnToSite}
@@ -184,7 +194,7 @@ export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
 
           <div className="pt-4 border-t hairline mt-4 text-[12px] text-stone-500 space-y-1.5 px-3">
             <div className="font-medium">Engineered for Client Found</div>
-            <div className="mono text-[10px]">v2.4.0 · Client Portal</div>
+            <div className="mono text-[10px]">v2.5.0 · Personal App Studio</div>
           </div>
         </aside>
 
@@ -206,6 +216,9 @@ export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
           {activeTab === 'invoices' && (
             <ClientInvoices invoices={clientInvoices} onNotification={(msg) => showToast(msg)} />
           )}
+          {activeTab === 'assets' && (
+            <ClientAssets projects={clientProjects} assets={storeState.assets} />
+          )}
           {activeTab === 'team' && (
             <ClientTeam projects={clientProjects} clientAccount={clientAccount} cms={storeState.cms} />
           )}
@@ -218,6 +231,12 @@ export const ClientPortal: React.FC<Props> = ({ onReturnToSite }) => {
       <ProjectInquiryModal
         open={inquiryOpen}
         onClose={() => setInquiryOpen(false)}
+        onSuccess={() => {}}
+      />
+
+      <AppConfiguratorModal
+        open={configuratorOpen}
+        onClose={() => setConfiguratorOpen(false)}
         onSuccess={() => {}}
       />
     </div>

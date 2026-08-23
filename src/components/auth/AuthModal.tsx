@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { studioStore, UserProfile } from '../../store/studioStore';
 import { useBodyLock } from '../../hooks';
 
@@ -26,6 +26,15 @@ export const AuthModal: React.FC<Props> = ({ open, onClose, onSuccess, initialTa
   const [regCompany, setRegCompany] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setActiveRole(initialTab);
+      setMode('login');
+      setShowPassword(false);
+      setErrorMessage('');
+    }
+  }, [open, initialTab]);
 
   if (!open) return null;
 

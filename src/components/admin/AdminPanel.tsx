@@ -8,15 +8,18 @@ import { ProjectsManager } from './ProjectsManager';
 import { InvoicesManager } from './InvoicesManager';
 import { CMSManager } from './CMSManager';
 import { AuditLogs } from './AuditLogs';
+import { ChatInboxManager } from './ChatInboxManager';
 import { LogoutIcon } from '../common/icons';
 
 interface Props {
   onReturnToSite: () => void;
 }
 
+type AdminTab = 'dashboard' | 'leads' | 'projects' | 'invoices' | 'chats' | 'cms' | 'logs';
+
 export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
   const [storeState, setStoreState] = useState(studioStore.getState());
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'leads' | 'projects' | 'invoices' | 'cms' | 'logs'>('dashboard');
+  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [readLogIds, setReadLogIds] = useState<string[]>([]);
@@ -73,6 +76,7 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
   };
 
   const unreadLogs = storeState.logs.filter((log) => !readLogIds.includes(log.id));
+  const unreadChatCount = storeState.chatThreads.filter((t) => t.unreadCountAdmin > 0).length;
 
   if (storeState.currentUser?.role !== 'admin') {
     return <AdminLogin theme={theme} onSuccess={() => setStoreState({ ...studioStore.getState() })} />;
@@ -83,10 +87,11 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
     showToast('Logged out successfully.');
   };
 
-  const navItems: { id: 'dashboard' | 'leads' | 'projects' | 'invoices' | 'cms' | 'logs'; label: string; icon: string; badge?: number }[] = [
+  const navItems: { id: AdminTab; label: string; icon: string; badge?: number }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'leads', label: 'Inbound Leads', icon: '📥', badge: storeState.leads.filter(l => l.status === 'New').length },
     { id: 'projects', label: 'Active Builds', icon: '🚀', badge: storeState.projects.filter(p => p.status === 'In Progress').length },
+    { id: 'chats', label: 'Live Chat Desk', icon: '💬', badge: unreadChatCount },
     { id: 'invoices', label: 'Invoices & Billing', icon: '💳', badge: storeState.invoices.filter(i => i.status === 'Pending').length },
     { id: 'cms', label: 'Site CMS & Slots', icon: '⚙️' },
     { id: 'logs', label: 'Audit Logs', icon: '📜' },
@@ -108,7 +113,7 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
                   ADMIN CONSOLE
                 </span>
               </div>
-              <div className="text-[10px] text-stone-400">Master Operations & Management Platform</div>
+              <div className="text-[10px] text-stone-400">Operations, Leads & Infrastructure Control</div>
             </div>
           </div>
 
@@ -287,6 +292,7 @@ export const AdminPanel: React.FC<Props> = ({ onReturnToSite }) => {
             />
           )}
           {activeTab === 'projects' && <ProjectsManager onNotification={(msg) => showToast(msg)} />}
+          {activeTab === 'chats' && <ChatInboxManager onNotification={(msg) => showToast(msg)} />}
           {activeTab === 'invoices' && <InvoicesManager onNotification={(msg) => showToast(msg)} />}
           {activeTab === 'cms' && <CMSManager onNotification={(msg) => showToast(msg)} />}
           {activeTab === 'logs' && <AuditLogs />}
