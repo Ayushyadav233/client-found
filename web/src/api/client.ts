@@ -1,4 +1,4 @@
-import type { CMSConfig, Invoice, Lead, Project, StudioState, UserProfile } from '../store/studioStore';
+import type { AppConfig, ChatMessage, ChatThread, CMSConfig, Invoice, Lead, Project, ProjectAsset, StudioState, UserProfile } from '../store/studioStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -80,4 +80,41 @@ export const api = {
 
   // ── Logs / Notifications ──
   deleteLog: (id: string) => request<{ success: boolean }>(`/logs/${id}`, { method: 'DELETE' }),
+
+  // ── App Configs (Personal App Builder) ──
+  saveAppConfig: (config: Partial<AppConfig>) =>
+    request<{ success: boolean; appConfig: AppConfig }>('/app-config', { method: 'POST', body: JSON.stringify(config) }),
+  getAllAppConfigs: () =>
+    request<{ success: boolean; appConfigs: AppConfig[] }>('/app-config'),
+  getMyApps: () =>
+    request<{ success: boolean; appConfigs: AppConfig[] }>('/app-config/my-apps'),
+  updateAppConfigStatus: (id: string, status: AppConfig['status']) =>
+    request<{ success: boolean }>(`/app-config/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  // ── Chat & Direct Queries ──
+  getAllChatThreads: () =>
+    request<{ success: boolean; threads: ChatThread[] }>('/chat/threads'),
+  getMyChatThreads: (email?: string) =>
+    request<{ success: boolean; threads: ChatThread[] }>(`/chat/my-threads${email ? `?email=${encodeURIComponent(email)}` : ''}`),
+  getChatThread: (id: string) =>
+    request<{ success: boolean; thread: ChatThread }>(`/chat/threads/${id}`),
+  createChatThread: (data: { clientName: string; clientEmail: string; company?: string; subject: string; category: ChatThread['category']; initialMessage: string }) =>
+    request<{ success: boolean; thread: ChatThread }>('/chat/threads', { method: 'POST', body: JSON.stringify(data) }),
+  sendChatMessage: (threadId: string, data: { senderName: string; senderEmail: string; senderRole: 'client' | 'admin' | 'visitor'; content: string }) =>
+    request<{ success: boolean; thread: ChatThread; message: ChatMessage }>(`/chat/threads/${threadId}/messages`, { method: 'POST', body: JSON.stringify(data) }),
+  markChatRead: (threadId: string, role: 'admin' | 'client') =>
+    request<{ success: boolean }>(`/chat/threads/${threadId}/read`, { method: 'PATCH', body: JSON.stringify({ role }) }),
+  updateChatThreadStatus: (threadId: string, status: ChatThread['status']) =>
+    request<{ success: boolean }>(`/chat/threads/${threadId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  // ── Project Assets & Deliverables ──
+  getProjectAssets: (projectId: string) =>
+    request<{ success: boolean; assets: ProjectAsset[] }>(`/assets/project/${projectId}`),
+  getAllAssets: () =>
+    request<{ success: boolean; assets: ProjectAsset[] }>('/assets'),
+  addProjectAsset: (asset: Partial<ProjectAsset>) =>
+    request<{ success: boolean; asset: ProjectAsset }>('/assets', { method: 'POST', body: JSON.stringify(asset) }),
+  deleteProjectAsset: (id: string) =>
+    request<{ success: boolean }>(`/assets/${id}`, { method: 'DELETE' }),
 };
+

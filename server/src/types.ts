@@ -95,5 +95,67 @@ export interface AuditLog {
   timestamp: string;
   user: string;
   action: string;
-  type: 'lead' | 'project' | 'invoice' | 'cms' | 'auth';
+  type: 'lead' | 'project' | 'invoice' | 'cms' | 'auth' | 'chat' | 'asset' | 'app_config';
 }
+
+export interface AppConfig {
+  id: string;
+  userId?: string;
+  projectId?: string;
+  clientName: string;
+  clientEmail: string;
+  companyName: string;
+  appName: string;
+  appType: string;
+  tagline: string;
+  primaryColor: string;
+  accentColor: string;
+  theme: 'dark' | 'light';
+  icon: string;
+  features: string[];
+  platforms: string[];
+  estimatedCost: string;
+  estimatedWeeks: string;
+  status: 'Draft' | 'Submitted' | 'Under Review' | 'Building' | 'Completed';
+  createdAt: string;
+  notes?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  threadId: string;
+  senderName: string;
+  senderEmail: string;
+  senderRole: 'client' | 'admin' | 'visitor';
+  content: string;
+  timestamp: string;
+}
+
+export interface ChatThread {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  company?: string;
+  subject: string;
+  category: 'General' | 'Project Inquiry' | 'Bug / Fix Request' | 'Urgent Support';
+  status: 'Open' | 'In Progress' | 'Resolved';
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCountClient: number;
+  unreadCountAdmin: number;
+  createdAt: string;
+  messages: ChatMessage[];
+}
+
+export interface ProjectAsset {
+  id: string;
+  projectId: string;
+  title: string;
+  category: 'design' | 'build' | 'code' | 'document' | 'brand';
+  url: string;
+  fileSize?: string;
+  version?: string;
+  uploadedBy: string;
+  createdAt: string;
+}
+

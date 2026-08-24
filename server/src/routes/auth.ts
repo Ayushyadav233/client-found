@@ -56,7 +56,7 @@ authRouter.post('/register', asyncHandler(async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to create account.' });
     return;
   }
-  setSessionCookie(req, res, signToken(user.id, user.role));
+  setSessionCookie(res, signToken(user.id, user.role));
   await addLog(`New client account registered: ${user.email} (${user.company || 'N/A'})`, 'auth', user.name);
   res.json({ success: true, user: toProfile(user) });
 }));
@@ -79,7 +79,7 @@ authRouter.post('/login', asyncHandler(async (req, res) => {
     return;
   }
 
-  setSessionCookie(req, res, signToken(user.id, user.role));
+  setSessionCookie(res, signToken(user.id, user.role));
   await addLog(`User ${user.email} (${user.role}) logged in successfully`, 'auth', user.name);
   res.json({ success: true, user: toProfile(user) });
 }));
@@ -101,7 +101,7 @@ authRouter.post('/admin', asyncHandler(async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to load admin account.' });
     return;
   }
-  setSessionCookie(req, res, signToken(user.id, user.role));
+  setSessionCookie(res, signToken(user.id, user.role));
   await addLog('Master Admin authenticated into console', 'auth', user.name);
   res.json({ success: true, user: toProfile(user) });
 }));

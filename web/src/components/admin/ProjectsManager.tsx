@@ -269,6 +269,7 @@ export const ProjectsManager: React.FC<Props> = ({ onNotification }) => {
               <button onClick={() => setSelectedPrj(null)} className="text-stone-400 hover:text-white">✕</button>
             </div>
 
+            {/* MILESTONE SECTION */}
             <div className="space-y-3">
               <h4 className="text-xs uppercase tracking-wider text-stone-400 font-semibold">Sprint Milestones Checklist</h4>
               <div className="space-y-2">
@@ -305,6 +306,45 @@ export const ProjectsManager: React.FC<Props> = ({ onNotification }) => {
                 >
                   + Add
                 </button>
+              </div>
+            </div>
+
+            {/* PROJECT DELIVERABLES / ASSETS SECTION */}
+            <div className="space-y-3 pt-3 border-t hairline">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs uppercase tracking-wider text-stone-400 font-semibold">Deliverables & Assets (Figma, APK, Code)</h4>
+              </div>
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {state.assets.filter((a) => a.projectId === selectedPrj.id).map((asset) => (
+                  <div key={asset.id} className="flex items-center justify-between p-2.5 rounded-xl surface text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm">📦</span>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-white truncate">{asset.title}</div>
+                        <div className="text-[10px] text-stone-400">{asset.category} · {asset.version || 'v1.0'}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <a href={asset.url} target="_blank" rel="noreferrer" className="text-gold hover:underline text-[11px]">
+                        Open ↗
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          studioStore.deleteProjectAsset(asset.id);
+                          onNotification('Asset removed');
+                        }}
+                        className="text-stone-500 hover:text-red-400 text-xs px-1"
+                        title="Delete asset"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {state.assets.filter((a) => a.projectId === selectedPrj.id).length === 0 && (
+                  <div className="text-[11px] text-stone-500 py-2">No deliverables added yet.</div>
+                )}
               </div>
             </div>
 

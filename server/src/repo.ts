@@ -1,7 +1,319 @@
 import { pool, type Queryable } from './db.js';
-import type { AuditLog, ClientAccount, CMSConfig, Invoice, Lead, Project, TeamMember, Milestone, UserAccount, UserProfile } from './types.js';
+import type {
+  AppConfig,
+  AuditLog,
+  ChatMessage,
+  ChatThread,
+  ClientAccount,
+  CMSConfig,
+  Invoice,
+  Lead,
+  Project,
+  ProjectAsset,
+  TeamMember,
+  Milestone,
+  UserAccount,
+  UserProfile,
+} from './types.js';
 
 type Row = Record<string, unknown>;
+
+// ── App Configs ──
+function rowToAppConfig(r: Row): AppConfig {
+  return {
+    id: String(r.id),
+    userId: r.user_id ? String(r.user_id) : undefined,
+    projectId: r.project_id ? String(r.project_id) : undefined,
+    clientName: String(r.client_name),
+    clientEmail: String(r.client_email),
+    companyName: String(r.company_name),
+    appName: String(r.app_name),
+    appType: String(r.app_type),
+    tagline: String(r.tagline),
+    primaryColor: String(r.primary_color),
+    accentColor: String(r.accent_color),
+    theme: (r.theme as 'dark' | 'light') || 'dark',
+    icon: String(r.icon),
+    features: JSON.parse(String(r.features || '[]')) as string[],
+    platforms: JSON.parse(String(r.platforms || '[]')) as string[],
+    estimatedCost: String(r.estimated_cost),
+    estimatedWeeks: String(r.estimated_weeks),
+    status: (r.status as AppConfig['status']) || 'Submitted',
+    createdAt: String(r.created_at),
+    notes: r.notes ? String(r.notes) : undefined,
+  };
+}
+
+export async function allAppConfigs(): Promise<AppConfig[]> {
+  const { rows } = await pool.query('SELECT * FROM app_configs ORDER BY created_at DESC');
+  return rows.map(rowToAppConfig);
+}
+
+export async function getAppConfig(id: string): Promise<AppConfig | null> {
+  const { rows } = await pool.query('SELECT * FROM app_configs WHERE id = $1', [id]);
+  return rows[0] ? rowToAppConfig(rows[0]) : null;
+}
+
+export async function getAppConfigsByEmail(email: string): Promise<AppConfig[]> {
+  const { rows } = await pool.query('SELECT * FROM app_configs WHERE LOWER(client_email) = $1 ORDER BY created_at DESC', [
+    email.toLowerCase().trim(),
+  ]);
+  return rows.map(rowToAppConfig);
+}
+
+export async function insertAppConfig(c: AppConfig, q: Queryable = pool) {
+  await q.query(
+    `INSERT INTO app_configs (id, user_id, project_id, client_name, client_email, company_name, app_name, app_type, tagline, primary_color, accent_color, theme, icon, features, platforms, estimated_cost, estimated_weeks, status, created_at, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
+    [
+      c.id,
+      c.userId ?? null,
+      c.projectId ?? null,
+      c.clientName,
+      c.clientEmail.toLowerCase().trim(),
+      c.companyName,
+      c.appName,
+      c.appType,
+      c.tagline,
+      c.primaryColor,
+      c.accentColor,
+      c.theme,
+      c.icon,
+      JSON.stringify(c.features),
+      JSON.stringify(c.platforms),
+      c.estimatedCost,
+      c.estimatedWeeks,
+      c.status,
+      c.createdAt,
+      c.notes ?? null,
+    ]
+  );
+}
+
+export async function updateAppConfigStatus(id: string, status: AppConfig['status']) {
+  await pool.query('UPDATE app_configs SET status = $1 WHERE id = $2', [status, id]);
+}
+
+// ── Chat & Direct Queries ──
+function rowToChatMessage(r: Row): ChatMessage {
+  return {
+    id: String(r.id),
+    threadId: String(r.thread_id),
+    senderName: String(r.sender_name),
+    senderEmail: String(r.sender_email),
+    senderRole: r.sender_role as ChatMessage['senderRole'],
+    content: String(r.content),
+    timestamp: String(r.timestamp),
+  };
+}
+
+export async function allChatThreads(): Promise<ChatThread[]> {
+  const { rows } = await pool.query('SELECT * FROM chat_threads ORDER BY last_message_at DESC');
+  const threads: ChatThread[] = [];
+  for (const r of rows) {
+    const threadId = String(r.id);
+    const { rows: msgRows } = await pool.query(
+      'SELECT * FROM chat_messages WHERE thread_id = $1 ORDER BY timestamp ASC',
+      [threadId]
+    );
+    threads.push({
+      id: threadId,
+      clientName: String(r.client_name),
+      clientEmail: String(r.client_email),
+      company: r.company ? String(r.company) : undefined,
+      subject: String(r.subject),
+      category: (r.category as ChatThread['category']) || 'General',
+      status: (r.status as ChatThread['status']) || 'Open',
+      lastMessage: String(r.last_message),
+      lastMessageAt: String(r.last_message_at),
+      unreadCountClient: Number(r.unread_count_client),
+      unreadCountAdmin: Number(r.unread_count_admin),
+      createdAt: String(r.created_at),
+      messages: msgRows.map(rowToChatMessage),
+    });
+  }
+  return threads;
+}
+
+export async function getChatThread(id: string): Promise<ChatThread | null> {
+  const { rows } = await pool.query('SELECT * FROM chat_threads WHERE id = $1', [id]);
+  if (!rows[0]) return null;
+  const r = rows[0];
+  const { rows: msgRows } = await pool.query(
+    'SELECT * FROM chat_messages WHERE thread_id = $1 ORDER BY timestamp ASC',
+    [id]
+  );
+  return {
+    id: String(r.id),
+    clientName: String(r.client_name),
+    clientEmail: String(r.client_email),
+    company: r.company ? String(r.company) : undefined,
+    subject: String(r.subject),
+    category: (r.category as ChatThread['category']) || 'General',
+    status: (r.status as ChatThread['status']) || 'Open',
+    lastMessage: String(r.last_message),
+    lastMessageAt: String(r.last_message_at),
+    unreadCountClient: Number(r.unread_count_client),
+    unreadCountAdmin: Number(r.unread_count_admin),
+    createdAt: String(r.created_at),
+    messages: msgRows.map(rowToChatMessage),
+  };
+}
+
+export async function getChatThreadsByEmail(email: string): Promise<ChatThread[]> {
+  const { rows } = await pool.query(
+    'SELECT * FROM chat_threads WHERE LOWER(client_email) = $1 ORDER BY last_message_at DESC',
+    [email.toLowerCase().trim()]
+  );
+  const threads: ChatThread[] = [];
+  for (const r of rows) {
+    const threadId = String(r.id);
+    const { rows: msgRows } = await pool.query(
+      'SELECT * FROM chat_messages WHERE thread_id = $1 ORDER BY timestamp ASC',
+      [threadId]
+    );
+    threads.push({
+      id: threadId,
+      clientName: String(r.client_name),
+      clientEmail: String(r.client_email),
+      company: r.company ? String(r.company) : undefined,
+      subject: String(r.subject),
+      category: (r.category as ChatThread['category']) || 'General',
+      status: (r.status as ChatThread['status']) || 'Open',
+      lastMessage: String(r.last_message),
+      lastMessageAt: String(r.last_message_at),
+      unreadCountClient: Number(r.unread_count_client),
+      unreadCountAdmin: Number(r.unread_count_admin),
+      createdAt: String(r.created_at),
+      messages: msgRows.map(rowToChatMessage),
+    });
+  }
+  return threads;
+}
+
+export async function insertChatThread(t: Omit<ChatThread, 'messages'>, initialMessage?: string) {
+  await pool.query(
+    `INSERT INTO chat_threads (id, client_name, client_email, company, subject, category, status, last_message, last_message_at, unread_count_client, unread_count_admin, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+    [
+      t.id,
+      t.clientName,
+      t.clientEmail.toLowerCase().trim(),
+      t.company ?? null,
+      t.subject,
+      t.category,
+      t.status,
+      t.lastMessage,
+      t.lastMessageAt,
+      t.unreadCountClient,
+      t.unreadCountAdmin,
+      t.createdAt,
+    ]
+  );
+  if (initialMessage) {
+    const msgId = `msg-${Date.now()}-${Math.floor(Math.random() * 1e4)}`;
+    await insertChatMessage({
+      id: msgId,
+      threadId: t.id,
+      senderName: t.clientName,
+      senderEmail: t.clientEmail,
+      senderRole: 'client',
+      content: initialMessage,
+      timestamp: t.createdAt,
+    });
+  }
+}
+
+export async function insertChatMessage(m: ChatMessage) {
+  await pool.query(
+    `INSERT INTO chat_messages (id, thread_id, sender_name, sender_email, sender_role, content, timestamp)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [m.id, m.threadId, m.senderName, m.senderEmail.toLowerCase().trim(), m.senderRole, m.content, m.timestamp]
+  );
+
+  const isAdmin = m.senderRole === 'admin';
+  await pool.query(
+    `UPDATE chat_threads
+     SET last_message = $1,
+         last_message_at = $2,
+         unread_count_admin = CASE WHEN $3 = true THEN 0 ELSE unread_count_admin + 1 END,
+         unread_count_client = CASE WHEN $3 = true THEN unread_count_client + 1 ELSE 0 END
+     WHERE id = $4`,
+    [m.content, m.timestamp, isAdmin, m.threadId]
+  );
+}
+
+export async function updateChatThreadStatus(id: string, status: ChatThread['status']) {
+  await pool.query('UPDATE chat_threads SET status = $1 WHERE id = $2', [status, id]);
+}
+
+export async function markChatRead(threadId: string, role: 'admin' | 'client') {
+  if (role === 'admin') {
+    await pool.query('UPDATE chat_threads SET unread_count_admin = 0 WHERE id = $1', [threadId]);
+  } else {
+    await pool.query('UPDATE chat_threads SET unread_count_client = 0 WHERE id = $1', [threadId]);
+  }
+}
+
+// ── Project Assets & Deliverables ──
+function rowToAsset(r: Row): ProjectAsset {
+  return {
+    id: String(r.id),
+    projectId: String(r.project_id),
+    title: String(r.title),
+    category: r.category as ProjectAsset['category'],
+    url: String(r.url),
+    fileSize: r.file_size ? String(r.file_size) : undefined,
+    version: r.version ? String(r.version) : undefined,
+    uploadedBy: String(r.uploaded_by),
+    createdAt: String(r.created_at),
+  };
+}
+
+export async function getAssetsByProjectId(projectId: string): Promise<ProjectAsset[]> {
+  const { rows } = await pool.query('SELECT * FROM project_assets WHERE project_id = $1 ORDER BY created_at DESC', [
+    projectId,
+  ]);
+  return rows.map(rowToAsset);
+}
+
+export async function allAssets(): Promise<ProjectAsset[]> {
+  const { rows } = await pool.query('SELECT * FROM project_assets ORDER BY created_at DESC');
+  return rows.map(rowToAsset);
+}
+
+export async function insertAsset(a: ProjectAsset) {
+  await pool.query(
+    `INSERT INTO project_assets (id, project_id, title, category, url, file_size, version, uploaded_by, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [a.id, a.projectId, a.title, a.category, a.url, a.fileSize ?? null, a.version ?? null, a.uploadedBy, a.createdAt]
+  );
+}
+
+export async function deleteAsset(id: string): Promise<boolean> {
+  const { rowCount } = await pool.query('DELETE FROM project_assets WHERE id = $1', [id]);
+  return (rowCount ?? 0) > 0;
+}
+
+// ── Reset ──
+export async function wipeAll(q: Queryable = pool) {
+  for (const table of [
+    'users',
+    'clients',
+    'leads',
+    'projects',
+    'invoices',
+    'cms',
+    'logs',
+    'app_configs',
+    'chat_messages',
+    'chat_threads',
+    'project_assets',
+  ]) {
+    await q.query(`DELETE FROM ${table}`);
+  }
+}
+
 
 // ── Users ──
 export async function allUsers(): Promise<UserAccount[]> {
@@ -226,9 +538,3 @@ export async function deleteLog(id: string): Promise<boolean> {
   return (rowCount ?? 0) > 0;
 }
 
-// ── Reset ──
-export async function wipeAll(q: Queryable = pool) {
-  for (const table of ['users', 'clients', 'leads', 'projects', 'invoices', 'cms', 'logs']) {
-    await q.query(`DELETE FROM ${table}`);
-  }
-}

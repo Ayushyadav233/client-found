@@ -14,6 +14,9 @@ import { cmsRouter } from './routes/cms.js';
 import { clientsRouter } from './routes/clients.js';
 import { logsRouter } from './routes/logs.js';
 import { stateRouter } from './routes/state.js';
+import { appConfigRouter } from './routes/appConfig.js';
+import { chatRouter } from './routes/chat.js';
+import { assetsRouter } from './routes/assets.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,10 +44,10 @@ export function createApp(): express.Express {
   app.use(cookieParser());
   app.use(express.json({ limit: '1mb' }));
 
-  const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+  const clientOrigins = process.env.CLIENT_ORIGIN?.split(',').map((o) => o.trim()).filter(Boolean);
   app.use(
     cors({
-      origin: process.env.NODE_ENV === 'production' ? undefined : clientOrigin,
+      origin: clientOrigins && clientOrigins.length > 0 ? clientOrigins : true,
       credentials: true,
     })
   );
@@ -61,13 +64,22 @@ export function createApp(): express.Express {
   app.use('/api/clients', clientsRouter);
   app.use('/api/logs', logsRouter);
   app.use('/api/state', stateRouter);
+  app.use('/api/app-config', appConfigRouter);
+  app.use('/api/chat', chatRouter);
+  app.use('/api/assets', assetsRouter);
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ error: 'Not found.' });
   });
 
-  const clientDist = path.resolve(__dirname, '../../dist');
-  if (fs.existsSync(clientDist)) {
+  const clientDist = [
+    path.resolve(__dirname, '../../dist'),
+    path.resolve(__dirname, '../../web/dist'),
+    path.resolve(process.cwd(), 'dist'),
+    path.resolve(process.cwd(), 'web/dist'),
+  ].find((p) => fs.existsSync(p));
+
+  if (clientDist) {
     app.use(express.static(clientDist));
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api/')) return next();

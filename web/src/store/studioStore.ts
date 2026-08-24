@@ -95,7 +95,68 @@ export interface AuditLog {
   timestamp: string;
   user: string;
   action: string;
-  type: 'lead' | 'project' | 'invoice' | 'cms' | 'auth';
+  type: 'lead' | 'project' | 'invoice' | 'cms' | 'auth' | 'chat' | 'asset' | 'app_config';
+}
+
+export interface AppConfig {
+  id: string;
+  userId?: string;
+  projectId?: string;
+  clientName: string;
+  clientEmail: string;
+  companyName: string;
+  appName: string;
+  appType: string;
+  tagline: string;
+  primaryColor: string;
+  accentColor: string;
+  theme: 'dark' | 'light';
+  icon: string;
+  features: string[];
+  platforms: string[];
+  estimatedCost: string;
+  estimatedWeeks: string;
+  status: 'Draft' | 'Submitted' | 'Under Review' | 'Building' | 'Completed';
+  createdAt: string;
+  notes?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  threadId: string;
+  senderName: string;
+  senderEmail: string;
+  senderRole: 'client' | 'admin' | 'visitor';
+  content: string;
+  timestamp: string;
+}
+
+export interface ChatThread {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  company?: string;
+  subject: string;
+  category: 'General' | 'Project Inquiry' | 'Bug / Fix Request' | 'Urgent Support';
+  status: 'Open' | 'In Progress' | 'Resolved';
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCountClient: number;
+  unreadCountAdmin: number;
+  createdAt: string;
+  messages: ChatMessage[];
+}
+
+export interface ProjectAsset {
+  id: string;
+  projectId: string;
+  title: string;
+  category: 'design' | 'build' | 'code' | 'document' | 'brand';
+  url: string;
+  fileSize?: string;
+  version?: string;
+  uploadedBy: string;
+  createdAt: string;
 }
 
 export interface StudioState {
@@ -108,6 +169,9 @@ export interface StudioState {
   clients: ClientAccount[];
   cms: CMSConfig;
   logs: AuditLog[];
+  appConfigs: AppConfig[];
+  chatThreads: ChatThread[];
+  assets: ProjectAsset[];
 }
 
 const EMPTY_CMS: CMSConfig = {
@@ -133,6 +197,9 @@ function emptyState(): StudioState {
     clients: [],
     cms: EMPTY_CMS,
     logs: [],
+    appConfigs: [],
+    chatThreads: [],
+    assets: [],
   };
 }
 
@@ -391,6 +458,219 @@ class StudioStore {
     api.deleteLog(id).catch((err) => this.syncWarn(`log ${id} delete`, err));
   }
 
+  // ── App Configs (Personal App Builder) ──
+  public async saveAppConfig(config: Partial<AppConfig>): Promise<AppConfig> {
+    const user = this.state.currentUser;
+    const newConfig: AppConfig = {
+      id: config.id || `APP-CFG-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      userId: user?.id,
+      clientName: config.clientName || user?.name || 'Prospective Client',
+      clientEmail: config.clientEmail || user?.email || '',
+      companyName: config.companyName || user?.company || '',
+      appName: config.appName || 'My Custom App',
+      appType: config.appType || 'Creator Community',
+      tagline: config.tagline || '',
+      primaryColor: config.primaryColor || '#c9a86c',
+      accentColor: config.accentColor || '#e3c893',
+      theme: config.theme || 'dark',
+      icon: config.icon || 'sparkles',
+      features: config.features || [],
+      platforms: config.platforms || ['iOS App Store', 'Android Play Store', 'PWA Web App'],
+      estimatedCost: config.estimatedCost || '$25,000 - $35,000',
+      estimatedWeeks: config.estimatedWeeks || '4-6 Weeks',
+      status: config.status || 'Submitted',
+      createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      notes: config.notes,
+    };
+
+    this.state.appConfigs.unshift(newConfig);
+    this.notify();
+
+    try {
+      const res = await api.saveAppConfig(newConfig);
+      if (res.success && res.appConfig) {
+        const idx = this.state.appConfigs.findIndex((c) => c.id === newConfig.id);
+        if (idx !== -1) {
+          this.state.appConfigs[idx] = res.appConfig;
+          this.notify();
+        }
+        return res.appConfig;
+      }
+    } catch (err) {
+      this.syncWarn('app config save', err);
+    }
+    return newConfig;
+  }
+
+  public updateAppConfigStatus(id: string, status: AppConfig['status']) {
+    const cfg = this.state.appConfigs.find((c) => c.id === id);
+    if (cfg) {
+      cfg.status = status;
+      this.notify();
+      api.updateAppConfigStatus(id, status).catch((err) => this.syncWarn(`app config ${id} status`, err));
+    }
+  }
+
+  // ── Direct Chat & Queries ──
+  public async createChatThread(data: {
+    clientName: string;
+    clientEmail: string;
+    company?: string;
+    subject: string;
+    category: ChatThread['category'];
+    initialMessage: string;
+  }): Promise<ChatThread> {
+    const threadId = `THR-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1e3)}`;
+    const now = new Date().toISOString().replace('T', ' ').slice(0, 16);
+    const initialMsg: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      threadId,
+      senderName: data.clientName,
+      senderEmail: data.clientEmail,
+      senderRole: 'client',
+      content: data.initialMessage,
+      timestamp: now,
+    };
+
+    const newThread: ChatThread = {
+      id: threadId,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      company: data.company,
+      subject: data.subject,
+      category: data.category,
+      status: 'Open',
+      lastMessage: data.initialMessage,
+      lastMessageAt: now,
+      unreadCountClient: 0,
+      unreadCountAdmin: 1,
+      createdAt: now,
+      messages: [initialMsg],
+    };
+
+    this.state.chatThreads.unshift(newThread);
+    this.notify();
+
+    try {
+      const res = await api.createChatThread(data);
+      if (res.success && res.thread) {
+        const idx = this.state.chatThreads.findIndex((t) => t.id === threadId);
+        if (idx !== -1) {
+          this.state.chatThreads[idx] = res.thread;
+          this.notify();
+        }
+        return res.thread;
+      }
+    } catch (err) {
+      this.syncWarn('chat thread creation', err);
+    }
+    return newThread;
+  }
+
+  public async sendChatMessage(threadId: string, content: string, senderRole: 'client' | 'admin' = 'client'): Promise<ChatMessage | null> {
+    const user = this.state.currentUser;
+    const thread = this.state.chatThreads.find((t) => t.id === threadId);
+    const senderName = senderRole === 'admin' ? (user?.name ? `${user.name} (Engineering)` : 'ClientFound Team') : (user?.name || thread?.clientName || 'Client');
+    const senderEmail = user?.email || thread?.clientEmail || 'client@studio.com';
+    const now = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+    const newMsg: ChatMessage = {
+      id: `msg-${Date.now()}-${Math.floor(Math.random() * 1e4)}`,
+      threadId,
+      senderName,
+      senderEmail,
+      senderRole,
+      content,
+      timestamp: now,
+    };
+
+    if (thread) {
+      thread.messages.push(newMsg);
+      thread.lastMessage = content;
+      thread.lastMessageAt = now;
+      if (senderRole === 'admin') {
+        thread.unreadCountClient += 1;
+      } else {
+        thread.unreadCountAdmin += 1;
+      }
+      this.notify();
+    }
+
+    try {
+      const res = await api.sendChatMessage(threadId, { senderName, senderEmail, senderRole, content });
+      if (res.success && res.thread) {
+        const idx = this.state.chatThreads.findIndex((t) => t.id === threadId);
+        if (idx !== -1) {
+          this.state.chatThreads[idx] = res.thread;
+          this.notify();
+        }
+        return res.message;
+      }
+    } catch (err) {
+      this.syncWarn('chat message send', err);
+    }
+    return newMsg;
+  }
+
+  public markChatRead(threadId: string, role: 'admin' | 'client') {
+    const thread = this.state.chatThreads.find((t) => t.id === threadId);
+    if (thread) {
+      if (role === 'admin') thread.unreadCountAdmin = 0;
+      else thread.unreadCountClient = 0;
+      this.notify();
+      api.markChatRead(threadId, role).catch((err) => this.syncWarn(`chat ${threadId} mark read`, err));
+    }
+  }
+
+  public updateChatThreadStatus(threadId: string, status: ChatThread['status']) {
+    const thread = this.state.chatThreads.find((t) => t.id === threadId);
+    if (thread) {
+      thread.status = status;
+      this.notify();
+      api.updateChatThreadStatus(threadId, status).catch((err) => this.syncWarn(`chat ${threadId} status`, err));
+    }
+  }
+
+  // ── Assets & Deliverables ──
+  public async addProjectAsset(asset: Partial<ProjectAsset>): Promise<ProjectAsset> {
+    const user = this.state.currentUser;
+    const newAsset: ProjectAsset = {
+      id: asset.id || `AST-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      projectId: asset.projectId || '',
+      title: asset.title || 'Project Asset',
+      category: asset.category || 'build',
+      url: asset.url || '#',
+      fileSize: asset.fileSize,
+      version: asset.version,
+      uploadedBy: asset.uploadedBy || user?.name || 'ClientFound Studio',
+      createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
+    };
+
+    this.state.assets.unshift(newAsset);
+    this.notify();
+
+    try {
+      const res = await api.addProjectAsset(newAsset);
+      if (res.success && res.asset) {
+        const idx = this.state.assets.findIndex((a) => a.id === newAsset.id);
+        if (idx !== -1) {
+          this.state.assets[idx] = res.asset;
+          this.notify();
+        }
+        return res.asset;
+      }
+    } catch (err) {
+      this.syncWarn('asset addition', err);
+    }
+    return newAsset;
+  }
+
+  public deleteProjectAsset(id: string) {
+    this.state.assets = this.state.assets.filter((a) => a.id !== id);
+    this.notify();
+    api.deleteProjectAsset(id).catch((err) => this.syncWarn(`asset ${id} delete`, err));
+  }
+
   // ── Reset ──
   public async resetToDefaults() {
     try {
@@ -403,3 +683,4 @@ class StudioStore {
 }
 
 export const studioStore = new StudioStore();
+

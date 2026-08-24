@@ -3,8 +3,8 @@ services:
     name: client-found
     runtime: node
     plan: free
-    buildCommand: npm install && npm install --prefix server && npm run build:all
-    startCommand: npm run start:server
+    buildCommand: npm install && npm run build:all
+    startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:

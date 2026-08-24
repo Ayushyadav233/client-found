@@ -21,19 +21,22 @@ export function signToken(userId: string, role: 'admin' | 'client'): string {
   return jwt.sign({ sub: userId, role }, secret(), { expiresIn: '7d' });
 }
 
-export function setSessionCookie(req: Request, res: Response, token: string) {
-  const secure = req.secure || req.get('x-forwarded-proto') === 'https';
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+function sessionCookieBase() {
+  const isProd = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true as const,
+    sameSite: isProd ? ('none' as const) : ('lax' as const),
+    secure: isProd,
     path: '/',
-  });
+  };
+}
+
+export function setSessionCookie(res: Response, token: string) {
+  res.cookie(COOKIE_NAME, token, { ...sessionCookieBase(), maxAge: 7 * 24 * 60 * 60 * 1000 });
 }
 
 export function clearSessionCookie(res: Response) {
-  res.clearCookie(COOKIE_NAME, { httpOnly: true, sameSite: 'lax', path: '/' });
+  res.clearCookie(COOKIE_NAME, sessionCookieBase());
 }
 
 export function readToken(req: Request): JwtPayload | null {
