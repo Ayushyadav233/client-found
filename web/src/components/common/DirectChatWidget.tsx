@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { studioStore, ChatThread, ChatMessage, UserProfile } from '../../store/studioStore';
+import { studioStore } from '../../store/studioStore';
 import { showToast } from '../../store/toast';
 
 interface Props {

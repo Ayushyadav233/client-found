@@ -1,37 +1,28 @@
 {
-  "name": "react-vite-tailwind",
+  "name": "client-found",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
+  "workspaces": [
+    "web",
+    "server"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "dev:server": "npm run dev --prefix server",
-    "build:server": "npm run build --prefix server",
-    "start:server": "npm run start --prefix server",
+    "dev": "concurrently -n client,server -c cyan,magenta \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "npm run dev -w web",
+    "dev:server": "npm run dev -w server",
+    "start": "npm run start -w server",
+    "build": "npm run build -w web",
+    "build:server": "npm run build -w server",
     "build:all": "npm run build && npm run build:server",
-    "dev:all": "concurrently -n client,server -c cyan,magenta \"npm run dev\" \"npm run dev:server\""
-  },
-  "dependencies": {
-    "clsx": "2.1.1",
-    "react": "19.2.6",
-    "react-dom": "19.2.6",
-    "tailwind-merge": "3.4.0"
+    "preview": "npm run preview -w web",
+    "typecheck": "npm run typecheck -w web && npm run typecheck -w server"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "4.1.17",
     "@types/node": "22.19.17",
-    "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "5.1.1",
-    "concurrently": "^10.0.4",
-    "tailwindcss": "4.1.17",
-    "typescript": "5.9.3",
-    "vite": "7.3.2",
-    "vite-plugin-singlefile": "2.3.0"
+    "concurrently": "^10.0.4"
   }
 }

@@ -44,10 +44,10 @@ export function createApp(): express.Express {
   app.use(cookieParser());
   app.use(express.json({ limit: '1mb' }));
 
-  const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+  const clientOrigins = process.env.CLIENT_ORIGIN?.split(',').map((o) => o.trim()).filter(Boolean);
   app.use(
     cors({
-      origin: process.env.NODE_ENV === 'production' ? undefined : clientOrigin,
+      origin: clientOrigins && clientOrigins.length > 0 ? clientOrigins : true,
       credentials: true,
     })
   );
@@ -72,7 +72,7 @@ export function createApp(): express.Express {
     res.status(404).json({ error: 'Not found.' });
   });
 
-  const clientDist = path.resolve(__dirname, '../../dist');
+  const clientDist = path.resolve(__dirname, '../../web/dist');
   if (fs.existsSync(clientDist)) {
     app.use(express.static(clientDist));
     app.get('*', (req, res, next) => {

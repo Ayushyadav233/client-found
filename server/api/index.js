@@ -1,4 +1,4 @@
-import { createApp, ensureDbReady } from '../server/dist/app.js';
+import { createApp, ensureDbReady } from '../dist/app.js';
 
 const app = createApp();
 

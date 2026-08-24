@@ -239,11 +239,9 @@ function Nav({
 
 /* ════════════════════════════ Hero ════════════════════════════ */
 function Hero({
-  onWatchFilm,
   onOpenInquiry,
   cms,
 }: {
-  onWatchFilm: () => void;
   onOpenInquiry: () => void;
   cms: CMSConfig;
 }) {
@@ -1679,7 +1677,6 @@ export default function App() {
         />
         <Logos />
         <Hero
-          onWatchFilm={openFilm}
           onOpenInquiry={() => setInquiryOpen(true)}
           cms={storeState.cms}
         />
