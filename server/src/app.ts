@@ -72,8 +72,14 @@ export function createApp(): express.Express {
     res.status(404).json({ error: 'Not found.' });
   });
 
-  const clientDist = path.resolve(__dirname, '../../web/dist');
-  if (fs.existsSync(clientDist)) {
+  const clientDist = [
+    path.resolve(__dirname, '../../dist'),
+    path.resolve(__dirname, '../../web/dist'),
+    path.resolve(process.cwd(), 'dist'),
+    path.resolve(process.cwd(), 'web/dist'),
+  ].find((p) => fs.existsSync(p));
+
+  if (clientDist) {
     app.use(express.static(clientDist));
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api/')) return next();
